@@ -1,26 +1,119 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  margin: 0;
+  padding: 0;
+  font-family: UberMove, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  .input-field {
+    @apply w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg 
+           focus:border-black focus:ring-1 focus:ring-black focus:bg-white 
+           transition-colors outline-none;
+  }
+
+  .button-primary {
+    @apply w-full bg-black text-white py-4 rounded-lg text-lg font-medium 
+           hover:bg-gray-800 transition-colors disabled:opacity-50 
+           disabled:cursor-not-allowed;
+  }
+}
+
+/* Navbar styles */
+.navbar {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Link styles */
+.nav-link {
+  color: #545454;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: black;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Input styles */
+input::placeholder {
+  color: #6b7280;
+}
+
+/* Map container styles */
+.map-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Mapbox styles */
+.mapboxgl-ctrl-logo,
+.mapboxgl-ctrl-bottom-right {
+  display: none !important;
+}
+
+.mapboxgl-popup {
+  max-width: 200px;
+}
+
+.mapboxgl-popup-content {
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.mapboxgl-popup-content h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+}
+
+.mapboxgl-marker {
+  cursor: pointer;
+}
+
+.mapboxgl-marker:hover {
+  transform: scale(1.1);
 }
