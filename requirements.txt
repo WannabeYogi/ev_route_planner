@@ -1,0 +1,6 @@
+# Python package requirements for EV route planner algorithms
+googlemaps==4.10.0
+haversine==2.8.0
+folium==0.15.1
+pulp==2.7.0
+requests==2.31.0 
