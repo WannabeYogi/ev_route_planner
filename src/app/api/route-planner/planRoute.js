@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server';
-
 // Constants 
 const MIN_ARRIVAL_BATTERY = 10; // Minimum battery percentage on arrival
 const CHARGING_SPEED_KW = 60;    // Charging speed in kW
@@ -171,7 +169,7 @@ function getPointAtDistance(startPoint, distance, bearing) {
 /**
  * Plan an EV route with charging stations
  */
-async function planEvRoute(source, destination, initialBatteryPercent, batteryCapacity) {
+export default async function planEvRoute(source, destination, initialBatteryPercent, batteryCapacity) {
   console.log(`Planning route from (${source.lat}, ${source.lng}) to (${destination.lat}, ${destination.lng})`);
   console.log(`Battery: ${initialBatteryPercent}%, Capacity: ${batteryCapacity} km`);
   
@@ -508,56 +506,4 @@ async function planEvRoute(source, destination, initialBatteryPercent, batteryCa
   }
   
   return result;
-}
-
-export async function POST(request) {
-  try {
-    const data = await request.json();
-    
-    if (!data.source || !data.destination || !data.batteryPercentage || !data.batteryRange) {
-      return NextResponse.json(
-        { error: "Missing required parameters" },
-        { status: 400 }
-      );
-    }
-    
-    const source = {
-      lat: data.source.lat,
-      lng: data.source.lng
-    };
-    
-    const destination = {
-      lat: data.destination.lat,
-      lng: data.destination.lng
-    };
-    
-    const batteryPercentage = parseFloat(data.batteryPercentage);
-    const batteryRange = parseFloat(data.batteryRange);
-    
-    // Validate parameters
-    if (isNaN(batteryPercentage) || isNaN(batteryRange) || 
-        batteryPercentage <= 0 || batteryPercentage > 100 || 
-        batteryRange <= 0) {
-      return NextResponse.json(
-        { error: "Invalid battery parameters" },
-        { status: 400 }
-      );
-    }
-    
-    // Plan the route
-    const result = await planEvRoute(
-      source,
-      destination,
-      batteryPercentage,
-      batteryRange
-    );
-    
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("Error planning route:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to plan route" },
-      { status: 500 }
-    );
-  }
 } 
