@@ -1,13 +1,16 @@
 'use client';
 
 import './styles/button.css';
+import './styles/mapbox.css';
 
 import { useEffect, useState } from 'react';
 
-import ClientMap from './components/ClientMap';
 import Footer from './components/Footer';
+import GoogleMap from './components/GoogleMap';
 import Navbar from './components/Navbar';
+import RouteSummary from './components/RouteSummary';
 import SearchBox from './components/SearchBox';
+import { useGoogleMaps } from './utils/GoogleMapsLoader';
 
 export default function Home() {
   const [formData, setFormData] = useState({
@@ -23,13 +26,20 @@ export default function Home() {
     userLocation: null
   });
 
-  const [selectingLocation, setSelectingLocation] = useState(null);
+  const [routeData, setRouteData] = useState(null);
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [routeError, setRouteError] = useState(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  // Use our shared Google Maps loader
+  const { isLoaded, maps } = useGoogleMaps();
 
   // Get user's current location on mount
   useEffect(() => {
-    getCurrentLocation();
-  }, []);
+    if (isLoaded) {
+      getCurrentLocation();
+    }
+  }, [isLoaded]);
 
   const getCurrentLocation = () => {
     setIsLoadingLocation(true);
@@ -38,29 +48,50 @@ export default function Home() {
         async (position) => {
           const { latitude, longitude } = position.coords;
           
-          // Reverse geocode to get address
+          // Reverse geocode using Google Maps API
           try {
-            const response = await fetch(
-              `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?` +
-              `access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`
-            );
-            const data = await response.json();
-            const address = data.features[0]?.place_name || 'Current Location';
+            if (isLoaded && window.google && window.google.maps) {
+              const geocoder = new window.google.maps.Geocoder();
+              const latlng = { lat: latitude, lng: longitude };
+              
+              geocoder.geocode({ location: latlng }, (results, status) => {
+                if (status === "OK" && results[0]) {
+                  const address = results[0].formatted_address || 'Current Location';
+                  
+                  setMapLocations(prev => ({
+                    ...prev,
+                    userLocation: { lat: latitude, lng: longitude },
+                    source: { lat: latitude, lng: longitude }
+                  }));
+                  
+                  setFormData(prev => ({
+                    ...prev,
+                    source: address
+                  }));
+                } else {
+                  console.error('Geocoder failed:', status);
+                }
+                setIsLoadingLocation(false);
+              });
+            } else {
+              // Fallback if Google Maps isn't loaded
+              setMapLocations(prev => ({
+                ...prev,
+                userLocation: { lat: latitude, lng: longitude },
+                source: { lat: latitude, lng: longitude }
+              }));
+              
+              setFormData(prev => ({
+                ...prev,
+                source: 'Current Location'
+              }));
+              setIsLoadingLocation(false);
+            }
             
-            setMapLocations(prev => ({
-              ...prev,
-              userLocation: { lat: latitude, lng: longitude },
-              source: { lat: latitude, lng: longitude }
-            }));
-            
-            setFormData(prev => ({
-              ...prev,
-              source: address
-            }));
           } catch (error) {
             console.error('Error getting address:', error);
+            setIsLoadingLocation(false);
           }
-          setIsLoadingLocation(false);
         },
         (error) => {
           console.error('Error getting location:', error);
@@ -82,20 +113,78 @@ export default function Home() {
       ...prev,
       [type]: location.name
     }));
+    
+    // Reset route data when locations change
+    setRouteData(null);
+    setRouteError(null);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Validate battery percentage to not exceed 100
+    if (name === 'batteryPercentage' && parseInt(value) > 100) {
+      setFormData(prev => ({
+        ...prev,
+        [name]: '100'
+      }));
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // The route will be automatically shown when both locations are selected
-    console.log('Form submitted:', formData);
+    
+    // Validate all fields are filled
+    if (!mapLocations.source || !mapLocations.destination || !formData.batteryPercentage || !formData.batteryRange) {
+      setRouteError('Please fill in all fields (source, destination, battery percentage, and range)');
+      return;
+    }
+    
+    // Reset previous data
+    setRouteData(null);
+    setRouteError(null);
+    setIsLoadingRoute(true);
+    
+    try {
+      // Call our API route
+      const response = await fetch('/api/route', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sourceLocation: mapLocations.source,
+          destinationLocation: mapLocations.destination,
+          batteryPercentage: formData.batteryPercentage,
+          batteryRange: formData.batteryRange
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to plan route');
+      }
+      
+      const data = await response.json();
+      setRouteData(data);
+      
+      // Scroll to summary
+      const summaryElement = document.getElementById('route-summary');
+      if (summaryElement) {
+        summaryElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } catch (error) {
+      console.error('Error planning route:', error);
+      setRouteError(error.message || 'Failed to plan route. Please try again.');
+    } finally {
+      setIsLoadingRoute(false);
+    }
   };
 
   return (
@@ -119,7 +208,7 @@ export default function Home() {
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -mt-1 w-2 h-2 bg-black rounded-full"></div>
                     <SearchBox
-                      placeholder="Enter pickup location"
+                      placeholder="Enter starting location"
                       value={formData.source}
                       onLocationSelect={(location) => handleLocationSelect(location, 'source')}
                     />
@@ -133,7 +222,7 @@ export default function Home() {
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -mt-1 w-2 h-2 bg-gray-600 rounded-full"></div>
                     <SearchBox
-                      placeholder="Enter drop-off location"
+                      placeholder="Enter destination"
                       value={formData.destination}
                       onLocationSelect={(location) => handleLocationSelect(location, 'destination')}
                     />
@@ -163,7 +252,7 @@ export default function Home() {
 
                     <div>
                       <label className="block text-sm text-gray-600 mb-1">
-                        Battery Range
+                        Battery Range (on 100%)
                       </label>
                       <div className="relative">
                         <input
@@ -185,31 +274,40 @@ export default function Home() {
                   <button 
                     type="submit" 
                     className="button"
-                    disabled={!mapLocations.source || !mapLocations.destination}
+                    disabled={isLoadingRoute || (!mapLocations.source || !mapLocations.destination)}
                   >
                     <div>
                       <div>
                         <div>
-                          <svg 
-                            className="w-5 h-5" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                          >
-                            <path 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round" 
-                              strokeWidth={2} 
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round" 
-                              strokeWidth={2} 
-                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
-                          Plan Route
+                          {isLoadingRoute ? (
+                            <div className="flex items-center">
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                              Planning...
+                            </div>
+                          ) : (
+                            <>
+                              <svg 
+                                className="w-5 h-5" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                              >
+                                <path 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round" 
+                                  strokeWidth={2} 
+                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                />
+                                <path 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round" 
+                                  strokeWidth={2} 
+                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                              </svg>
+                              Plan Route
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -221,13 +319,22 @@ export default function Home() {
             {/* Map Container */}
             <div className="lg:order-2">
               <div className="h-[50vh] lg:h-[calc(100vh-8rem)] w-full rounded-lg overflow-hidden shadow-lg">
-                <ClientMap 
-                  sourceLocation={mapLocations.source}
+                <GoogleMap 
+                  startLocation={mapLocations.source}
                   destinationLocation={mapLocations.destination}
-                  userLocation={mapLocations.userLocation}
+                  routeData={routeData}
                 />
               </div>
             </div>
+          </div>
+          
+          {/* Route Summary Section */}
+          <div id="route-summary" className="mt-8">
+            <RouteSummary 
+              routeData={routeData}
+              isLoading={isLoadingRoute}
+              error={routeError}
+            />
           </div>
         </div>
       </main>

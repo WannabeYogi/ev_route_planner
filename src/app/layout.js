@@ -1,8 +1,12 @@
 import './globals.css';
 
+import { GoogleMapsProvider } from './utils/GoogleMapsLoader';
 import { Inter } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap'
+});
 
 export const metadata = {
   title: 'Smart EV - Electric Vehicle Route Planner',
@@ -12,7 +16,14 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <head>
+        {/* Preload Google Maps resources */}
+        <link rel="preconnect" href="https://maps.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://maps.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body className={inter.className}>
+        <GoogleMapsProvider>{children}</GoogleMapsProvider>
+      </body>
     </html>
   );
 }
