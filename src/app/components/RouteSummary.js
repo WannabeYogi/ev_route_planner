@@ -5,6 +5,31 @@ import { useEffect, useState } from 'react';
 export default function RouteSummary({ routeData, isLoading, error }) {
   const [expanded, setExpanded] = useState(false);
   
+  // Function to open Google Maps with the route
+  const openInGoogleMaps = () => {
+    if (!routeData || !routeData.route || routeData.route.length < 2) return;
+    
+    // Get start and destination coordinates
+    const start = routeData.route[0];
+    const destination = routeData.route[routeData.route.length - 1];
+    
+    // Format waypoints from charging stops
+    const waypoints = routeData.chargingStops
+      .map(stop => `${stop.location[0]},${stop.location[1]}`)
+      .join('|');
+    
+    // Construct Google Maps URL
+    let mapUrl = `https://www.google.com/maps/dir/?api=1&origin=${start[0]},${start[1]}&destination=${destination[0]},${destination[1]}`;
+    
+    // Add waypoints if available
+    if (waypoints) {
+      mapUrl += `&waypoints=${waypoints}&travelmode=driving`;
+    }
+    
+    // Open in new tab
+    window.open(mapUrl, '_blank');
+  };
+  
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-5 mt-6 mb-8">
@@ -33,7 +58,22 @@ export default function RouteSummary({ routeData, isLoading, error }) {
   
   return (
     <div className="bg-white rounded-lg shadow-md p-5 mt-6 mb-8">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Route Summary</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-gray-800">Route Summary</h2>
+        
+        {/* Navigation button */}
+        {routeData.route && routeData.route.length > 1 && (
+          <button
+            onClick={openInGoogleMaps}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="3 11 22 2 13 21 11 13 3 11" />
+            </svg>
+            Navigate
+          </button>
+        )}
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-blue-50 p-4 rounded-lg">
