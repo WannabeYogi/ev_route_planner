@@ -205,39 +205,40 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
           ],
         }}
       >
-        {/* Render start location marker if no directions yet */}
-        {startLocation && !directions && (
-          <Marker
-            position={{ lat: startLocation.lat, lng: startLocation.lng }}
-            icon={{
-              url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
-              scaledSize: new maps.Size(40, 40),
-            }}
-            title="Start Location"
-          />
-        )}
-
-        {/* Render destination marker if no directions yet */}
-        {destinationLocation && !directions && (
-          <Marker
-            position={{ lat: destinationLocation.lat, lng: destinationLocation.lng }}
-            icon={{
-              url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-              scaledSize: new maps.Size(40, 40),
-            }}
-            title="Destination"
-          />
-        )}
-
-        {/* Render charging stations if available and no directions yet */}
-        {routeData && routeData.chargingStops && !directions && (
+        {/* If directions are not available, show individual markers */}
+        {!directions && (
           <>
-            {routeData.chargingStops.map((stop, index) => (
+            {/* Render start location marker */}
+            {startLocation && (
+              <Marker
+                position={{ lat: startLocation.lat, lng: startLocation.lng }}
+                icon={{
+                  url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+                  scaledSize: new maps.Size(40, 40),
+                }}
+                title="Start Location"
+              />
+            )}
+
+            {/* Render destination marker */}
+            {destinationLocation && (
+              <Marker
+                position={{ lat: destinationLocation.lat, lng: destinationLocation.lng }}
+                icon={{
+                  url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+                  scaledSize: new maps.Size(40, 40),
+                }}
+                title="Destination"
+              />
+            )}
+
+            {/* Render charging stations if available */}
+            {routeData && routeData.chargingStops && routeData.chargingStops.map((stop, index) => (
               <Marker
                 key={`charging-${index}`}
                 position={{ lat: stop.location[0], lng: stop.location[1] }}
                 icon={{
-                  url: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png",
+                  url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
                   scaledSize: new maps.Size(36, 36),
                 }}
                 title={`${stop.name} - ${stop.chargingSpeedKW}kW`}
@@ -246,19 +247,58 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
           </>
         )}
 
-        {/* Render directions if available */}
+        {/* If directions are available, show directions with custom markers */}
         {directions && (
-          <DirectionsRenderer
-            directions={directions}
-            options={{
-              suppressMarkers: false,
-              polylineOptions: {
-                strokeColor: "#4F46E5",
-                strokeWeight: 5,
-                strokeOpacity: 0.8,
-              },
-            }}
-          />
+          <>
+            <DirectionsRenderer
+              directions={directions}
+              options={{
+                suppressMarkers: true, // Suppress default markers
+                polylineOptions: {
+                  strokeColor: "#4F46E5",
+                  strokeWeight: 5,
+                  strokeOpacity: 0.8,
+                },
+              }}
+            />
+            
+            {/* Add custom start marker */}
+            {startLocation && (
+              <Marker
+                position={{ lat: startLocation.lat, lng: startLocation.lng }}
+                icon={{
+                  url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                  scaledSize: new maps.Size(40, 40),
+                }}
+                title="Start Location"
+              />
+            )}
+            
+            {/* Add custom destination marker */}
+            {destinationLocation && (
+              <Marker
+                position={{ lat: destinationLocation.lat, lng: destinationLocation.lng }}
+                icon={{
+                  url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+                  scaledSize: new maps.Size(40, 40),
+                }}
+                title="Destination"
+              />
+            )}
+            
+            {/* Add custom charging station markers */}
+            {routeData && routeData.chargingStops && routeData.chargingStops.map((stop, index) => (
+              <Marker
+                key={`charging-${index}`}
+                position={{ lat: stop.location[0], lng: stop.location[1] }}
+                icon={{
+                  url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                  scaledSize: new maps.Size(36, 36),
+                }}
+                title={`${stop.name} - ${stop.chargingSpeedKW}kW`}
+              />
+            ))}
+          </>
         )}
       </GoogleMap>
     </div>

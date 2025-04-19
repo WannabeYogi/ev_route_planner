@@ -72,9 +72,9 @@ export default function RouteSummary({ routeData, isLoading, error }) {
                     <p className="text-sm text-gray-700">
                       <span className="font-medium text-purple-700">{stop.chargingSpeedKW} kW</span> charging speed
                     </p>
-                    {stop.distance && (
+                    {(stop.distanceToStation || stop.distance) && (
                       <p className="text-sm text-gray-600">
-                        {stop.distance.toFixed(1)} km {index === 0 ? 'from source' : `from charging station ${index}`}
+                        {(stop.distanceToStation || stop.distance).toFixed(1)} km {index === 0 ? 'from source' : `from charging station ${index}`}
                       </p>
                     )}
                   </div>
