@@ -351,6 +351,16 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
   
   function log(message) {
     console.log(message);
+    // Add spacing between major log sections using empty lines
+    if (message.startsWith("Current location") || 
+        message.startsWith("Found") || 
+        message.startsWith("No ") || 
+        message.startsWith("Going to charge") || 
+        message.startsWith("Destination") ||
+        message.startsWith("Trip Summary") ||
+        message.startsWith("Targeting")) {
+      logs.push("");  // Add empty line before major sections
+    }
     logs.push(message);
   }
   
@@ -414,11 +424,6 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
       break;
     }
     
-    log(`Found ${filtered.length} filtered stations toward destination:`);
-    filtered.forEach(station => {
-      log(`- ${station.name} at [${station.location[0].toFixed(4)}, ${station.location[1].toFixed(4)}] (${station.vicinity})`);
-    });
-    
     // Score and filter for reachable stations
     const scoredStations = [];
     
@@ -444,10 +449,22 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
       break;
     }
     
-    // Select the best station by score
-    const best = scoredStations.reduce((prev, current) => 
-      (current.score > prev.score) ? current : prev
-    );
+    // Sort stations by score (highest first)
+    scoredStations.sort((a, b) => b.score - a.score);
+    
+    // Display reachable stations with their scores
+    log(`Found ${scoredStations.length} reachable charging stations:`);
+    
+    // Show top stations with more details (limited to 5 or less)
+    const topStations = scoredStations.slice(0, Math.min(5, scoredStations.length));
+    topStations.forEach((station, index) => {
+      log(`${index + 1}. ${station.name} (${station.vicinity})`);
+      log(`   Distance: ${station.distanceToStation.toFixed(2)} km | Battery used: ${station.batteryUsed.toFixed(2)}%`);
+      log(`   Distance to destination: ${station.distanceToDest.toFixed(2)} km | Charging: ${station.chargingSpeedKW} kW | Wait: ${station.waitTimeMin} min`);
+    });
+    
+    // Select the best station (first one after sorting)
+    const best = scoredStations[0];
     
     log(`Going to charge at: ${best.name} (${best.vicinity})`);
     log(`Distance: ${best.distanceToStation.toFixed(2)} km | Battery used: ${best.batteryUsed.toFixed(2)}%`);
