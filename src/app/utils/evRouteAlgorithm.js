@@ -429,7 +429,7 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
     
     for (const station of filtered) {
       const distanceToStation = getDistance(current, station.location);
-      const batteryRequired = (distanceToStation / (fullRangeKm * 0.9)) * 100;
+      const batteryRequired = (distanceToStation / (maxRange * 0.9)) * 100;
       
       if (batteryRequired > usableBatteryPercentage) {
         continue; // Skip station that requires too much battery
