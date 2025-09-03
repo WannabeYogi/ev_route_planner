@@ -334,6 +334,8 @@ export default function Home() {
               routeData={routeData}
               isLoading={isLoadingRoute}
               error={routeError}
+              formData={formData}
+              mapLocations={mapLocations}
             />
           </div>
         </div>

@@ -1,5 +1,6 @@
 import './globals.css';
 
+import AuthProvider from './providers/AuthProvider';
 import { GoogleMapsProvider } from './utils/GoogleMapsLoader';
 import { Inter } from 'next/font/google';
 
@@ -22,7 +23,9 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://maps.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className={inter.className}>
-        <GoogleMapsProvider>{children}</GoogleMapsProvider>
+        <AuthProvider>
+          <GoogleMapsProvider>{children}</GoogleMapsProvider>
+        </AuthProvider>
       </body>
     </html>
   );

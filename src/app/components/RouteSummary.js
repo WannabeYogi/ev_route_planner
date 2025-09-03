@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from 'react';
 
-export default function RouteSummary({ routeData, isLoading, error }) {
+import { useSession } from 'next-auth/react';
+
+export default function RouteSummary({ routeData, isLoading, error, formData, mapLocations }) {
+  const { data: session } = useSession();
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState({ type: '', text: '' });
   const [expanded, setExpanded] = useState(false);
   
   // Helper function to format time in hours and minutes
@@ -68,6 +73,81 @@ export default function RouteSummary({ routeData, isLoading, error }) {
     return stages;
   };
   
+  // Function to save the trip
+  const handleSaveTrip = async () => {
+    if (!session || !routeData || !formData || !mapLocations) return;
+    
+    setIsSaving(true);
+    setSaveMessage({ type: '', text: '' });
+    
+    try {
+      const response = await fetch('/api/rides', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sourceLocation: {
+            name: formData.source,
+            lat: mapLocations.source.lat,
+            lng: mapLocations.source.lng
+          },
+          destinationLocation: {
+            name: formData.destination,
+            lat: mapLocations.destination.lat,
+            lng: mapLocations.destination.lng
+          },
+          batteryPercentage: formData.batteryPercentage,
+          batteryRange: formData.batteryRange,
+          routeData
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        // Special handling for duplicate ride error (409 Conflict)
+        if (response.status === 409 && data.existingRideId) {
+          setSaveMessage({
+            type: 'warning',
+            text: (
+              <div className="flex flex-col items-center">
+                <span>This exact ride has already been saved.</span>
+                <a 
+                  href={`/my-rides/${data.existingRideId}`} 
+                  className="underline hover:text-white mt-1"
+                >
+                  View existing ride
+                </a>
+              </div>
+            )
+          });
+        } else {
+          throw new Error(data.error || 'Failed to save trip');
+        }
+      } else {
+        setSaveMessage({ 
+          type: 'success', 
+          text: 'Trip saved successfully! View it in My Rides.' 
+        });
+      }
+      
+      // Clear message after 8 seconds
+      setTimeout(() => {
+        setSaveMessage({ type: '', text: '' });
+      }, 8000);
+      
+    } catch (error) {
+      console.error('Error saving trip:', error);
+      setSaveMessage({ 
+        type: 'error', 
+        text: error.message || 'Failed to save trip. Please try again.' 
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Function to open Google Maps with the route
   const openInGoogleMaps = () => {
     if (!routeData || !routeData.route || routeData.route.length < 2) return;
@@ -121,22 +201,58 @@ export default function RouteSummary({ routeData, isLoading, error }) {
   const stages = groupLogsIntoStages(logs);
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-5 mt-6 mb-8">
+    <div className="bg-white rounded-lg shadow-md p-5 mt-6 mb-8 relative">
+      {/* Save message toast */}
+      {saveMessage.text && (
+        <div className={`absolute top-0 left-0 right-0 p-3 text-white text-center transform -translate-y-full rounded-t-lg ${
+          saveMessage.type === 'success' ? 'bg-green-600' : 
+          saveMessage.type === 'warning' ? 'bg-amber-500' : 
+          'bg-red-600'
+        }`}>
+          {saveMessage.text}
+        </div>
+      )}
+      
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-gray-800">Route Summary</h2>
         
-        {/* Navigation button */}
-        {routeData.route && routeData.route.length > 1 && (
-          <button
-            onClick={openInGoogleMaps}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="3 11 22 2 13 21 11 13 3 11" />
-            </svg>
-            Navigate
-          </button>
-        )}
+        <div className="flex gap-2">
+          {/* Save Trip button - only shown for logged in users */}
+          {session && routeData.success && (
+            <button
+              onClick={handleSaveTrip}
+              disabled={isSaving}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h1a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h1v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
+                  </svg>
+                  Save Trip
+                </>
+              )}
+            </button>
+          )}
+          
+          {/* Navigation button */}
+          {routeData.route && routeData.route.length > 1 && (
+            <button
+              onClick={openInGoogleMaps}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="3 11 22 2 13 21 11 13 3 11" />
+              </svg>
+              Navigate
+            </button>
+          )}
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

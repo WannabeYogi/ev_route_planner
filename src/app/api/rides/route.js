@@ -1,37 +1,33 @@
 import { NextResponse } from 'next/server';
 import SavedRide from '@/app/models/SavedRide';
 import User from '@/app/models/User';
+import { authOptions } from '../auth/[...nextauth]/route';
 import connectToDatabase from '@/app/utils/mongodb';
-
-// Helper function to get user from request
-// Note: This is a placeholder. You'll replace this with proper auth logic later.
-async function getUserFromRequest(request) {
-  // For now, we'll use a query parameter userId for testing
-  // Later, you'll replace this with JWT token verification
-  const url = new URL(request.url);
-  const userId = url.searchParams.get('userId');
-  
-  if (!userId) {
-    return null;
-  }
-  
-  await connectToDatabase();
-  return await User.findOne({ userId: parseInt(userId) });
-}
+import { getServerSession } from 'next-auth/next';
 
 // GET - Fetch user's saved rides
 export async function GET(request) {
   try {
-    const user = await getUserFromRequest(request);
+    const session = await getServerSession(authOptions);
     
-    if (!user) {
+    if (!session) {
       return NextResponse.json(
-        { error: 'Unauthorized or user not found' },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }
     
     await connectToDatabase();
+    
+    // Find the user by ID from the session
+    const user = await User.findById(session.user.id);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
     
     const rides = await SavedRide.find({ user: user._id })
       .sort({ createdAt: -1 });
@@ -49,11 +45,11 @@ export async function GET(request) {
 // POST - Save a new ride
 export async function POST(request) {
   try {
-    const user = await getUserFromRequest(request);
+    const session = await getServerSession(authOptions);
     
-    if (!user) {
+    if (!session) {
       return NextResponse.json(
-        { error: 'Unauthorized or user not found' },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -76,6 +72,34 @@ export async function POST(request) {
     }
     
     await connectToDatabase();
+    
+    // Find the user by ID from the session
+    const user = await User.findById(session.user.id);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Check for duplicate rides based on source, destination, battery percentage, and range
+    const existingRide = await SavedRide.findOne({
+      user: user._id,
+      'sourceLocation.lat': sourceLocation.lat,
+      'sourceLocation.lng': sourceLocation.lng,
+      'destinationLocation.lat': destinationLocation.lat,
+      'destinationLocation.lng': destinationLocation.lng,
+      batteryPercentage: batteryPercentage,
+      batteryRange: batteryRange
+    });
+    
+    if (existingRide) {
+      return NextResponse.json(
+        { error: 'This ride has already been saved', existingRideId: existingRide._id },
+        { status: 409 } // 409 Conflict status code
+      );
+    }
     
     // Create the saved ride
     const savedRide = await SavedRide.create({

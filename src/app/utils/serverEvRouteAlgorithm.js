@@ -431,6 +431,22 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
     
     totalChargingTimeMin += chargingTimeMin;
     totalWaitTimeMin += best.waitTimeMin;
+    
+    // Store battery information and charging time in the station object
+    best.batteryBefore = remainingBattery;
+    best.batteryAfter = targetBattery;
+    best.chargingTimeMin = chargingTimeMin;
+    
+    // Store the distance from previous stop or source
+    if (stationsVisited.length === 0) {
+      // First charging stop - distance from source
+      best.distance = best.distanceToStation;
+    } else {
+      // Calculate distance from the previous charging stop
+      const prevStop = stationsVisited[stationsVisited.length - 1];
+      best.distance = getDistance(prevStop.location, best.location);
+    }
+    
     remainingBattery = targetBattery;
     
     log(`Charging Time: ${chargingTimeMin.toFixed(1)} min | Battery after charge: ${targetBattery.toFixed(1)}%`);

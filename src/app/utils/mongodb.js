@@ -21,6 +21,7 @@ async function connectToDatabase() {
     const opts = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      dbName: "evplanner",
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {

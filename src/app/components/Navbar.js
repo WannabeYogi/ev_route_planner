@@ -1,14 +1,26 @@
 'use client';
 
+import { signOut, useSession } from 'next-auth/react';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
 export default function Navbar() {
+  const { data: session, status } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const toggleProfileMenu = () => {
+    setIsProfileMenuOpen(!isProfileMenuOpen);
+  };
+
+  const handleSignOut = () => {
+    signOut({ callbackUrl: '/' });
   };
 
   return (
@@ -48,15 +60,63 @@ export default function Navbar() {
               <Link href="/help" className="text-gray-600 hover:text-black text-sm font-medium">
                 Help
               </Link>
-              <Link href="/login" className="text-gray-600 hover:text-black text-sm font-medium">
-                Log in
-              </Link>
-              <Link 
-                href="/signup" 
-                className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                Sign up
-              </Link>
+              
+              {status === 'authenticated' ? (
+                <div className="relative">
+                  <button
+                    onClick={toggleProfileMenu}
+                    className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-black"
+                  >
+                    {session.user.image ? (
+                      <img
+                        src={session.user.image}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                        {session.user.name?.charAt(0) || session.user.email.charAt(0)}
+                      </div>
+                    )}
+                    <span>{session.user.name || 'My Account'}</span>
+                  </button>
+                  
+                  {isProfileMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                      <Link
+                        href="/my-rides"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        My Saved Rides
+                      </Link>
+                      <Link
+                        href="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Profile
+                      </Link>
+                      <button
+                        onClick={handleSignOut}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <Link href="/login" className="text-gray-600 hover:text-black text-sm font-medium">
+                    Log in
+                  </Link>
+                  <Link 
+                    href="/register" 
+                    className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  >
+                    Sign up
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -119,22 +179,48 @@ export default function Navbar() {
               >
                 Help
               </Link>
-              <Link
-                href="/login"
-                className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-black hover:bg-gray-50"
-              >
-                Log in
-              </Link>
-              <Link
-                href="/signup"
-                className="block px-4 py-3 text-base font-medium text-white bg-black hover:bg-gray-800 transition-colors"
-              >
-                Sign up
-              </Link>
+              
+              {status === 'authenticated' ? (
+                <>
+                  <Link
+                    href="/my-rides"
+                    className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-black hover:bg-gray-50"
+                  >
+                    My Saved Rides
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-black hover:bg-gray-50"
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="block w-full text-left px-4 py-2 text-base font-medium text-gray-600 hover:text-black hover:bg-gray-50"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-black hover:bg-gray-50"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="block px-4 py-3 text-base font-medium text-white bg-black hover:bg-gray-800 transition-colors"
+                  >
+                    Sign up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
       </div>
     </nav>
   );
-} 
+}

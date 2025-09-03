@@ -1,35 +1,34 @@
 import { NextResponse } from 'next/server';
 import SavedRide from '@/app/models/SavedRide';
 import User from '@/app/models/User';
+import { authOptions } from '../../auth/[...nextauth]/route';
 import connectToDatabase from '@/app/utils/mongodb';
-
-// Helper function to get user from request (placeholder)
-async function getUserFromRequest(request) {
-  const url = new URL(request.url);
-  const userId = url.searchParams.get('userId');
-  
-  if (!userId) {
-    return null;
-  }
-  
-  await connectToDatabase();
-  return await User.findOne({ userId: parseInt(userId) });
-}
+import { getServerSession } from 'next-auth/next';
 
 // GET - Fetch a specific ride by ID
-export async function GET(request, { params }) {
+export async function GET(request, context) {
   try {
-    const { id } = params;
-    const user = await getUserFromRequest(request);
+    const { id } = await context.params;
+    const session = await getServerSession(authOptions);
     
-    if (!user) {
+    if (!session) {
       return NextResponse.json(
-        { error: 'Unauthorized or user not found' },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }
     
     await connectToDatabase();
+    
+    // Find the user by ID from the session
+    const user = await User.findById(session.user.id);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
     
     const ride = await SavedRide.findById(id);
     
@@ -59,19 +58,29 @@ export async function GET(request, { params }) {
 }
 
 // DELETE - Delete a specific ride
-export async function DELETE(request, { params }) {
+export async function DELETE(request, context) {
   try {
-    const { id } = params;
-    const user = await getUserFromRequest(request);
+    const { id } = await context.params;
+    const session = await getServerSession(authOptions);
     
-    if (!user) {
+    if (!session) {
       return NextResponse.json(
-        { error: 'Unauthorized or user not found' },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }
     
     await connectToDatabase();
+    
+    // Find the user by ID from the session
+    const user = await User.findById(session.user.id);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
     
     const ride = await SavedRide.findById(id);
     
