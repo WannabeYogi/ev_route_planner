@@ -1,24 +1,13 @@
 'use client';
 
-// Client-side version of the EV route algorithm
-
 import { decode } from '@googlemaps/polyline-codec';
 import { planEvRoute as serverPlanEvRoute } from './serverEvRouteAlgorithm';
 
-// Helper function to determine if code is running on the server
 const isServer = typeof window === 'undefined';
 
-// Import the server algorithm for re-export if needed
 
 
-/**
- * Makes a Google Maps API request using the appropriate method (direct or proxy)
- * @param {string} endpoint - API endpoint path (e.g., 'directions/json')
- * @param {Object} params - Query parameters for the API call
- * @returns {Promise<Object>} API response data
- */
 async function makeGoogleMapsApiRequest(endpoint, params) {
-  // Create URL search params
   const searchParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     searchParams.append(key, value);
@@ -29,11 +18,9 @@ async function makeGoogleMapsApiRequest(endpoint, params) {
     let response;
     
     if (isServer) {
-      // Server-side: use direct fetch with API key
       url = `https://maps.googleapis.com/maps/api/${endpoint}?${searchParams.toString()}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
       response = await fetch(url);
     } else {
-      // Client-side: use our API proxy route
       searchParams.append('endpoint', endpoint);
       url = `/api/maps?${searchParams.toString()}`;
       response = await fetch(url);
@@ -46,17 +33,12 @@ async function makeGoogleMapsApiRequest(endpoint, params) {
   }
 }
 
-/**
- * Calculates distance between two coordinates using the Haversine formula
- * @param {[number, number]} coord1 - First coordinate [lat, lng]
- * @param {[number, number]} coord2 - Second coordinate [lat, lng]
- * @returns {number} Distance in kilometers
- */
+// Haversine formula to get distance (in km) between two lat/lng points
 function getDistance(coord1, coord2) {
   const [lat1, lon1] = coord1;
   const [lat2, lon2] = coord2;
   
-  const R = 6371; // Earth's radius in km
+  const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   
@@ -69,15 +51,7 @@ function getDistance(coord1, coord2) {
   return R * c;
 }
 
-/**
- * Calculate maximum possible distance with given battery constraints
- * @param {number} startPercent - Current battery percentage
- * @param {number} minEndPercent - Minimum battery percentage to maintain
- * @param {number} batteryCapacityKwh - Battery capacity in kWh
- * @param {number} rangeKm - Maximum range in kilometers on full battery
- * @param {number} baseDischargeEfficiency - Base discharge efficiency factor
- * @returns {number} Maximum distance in kilometers
- */
+
 function calculateMaxDistance(startPercent, minEndPercent, batteryCapacityKwh, rangeKm, baseDischargeEfficiency = 0.95) {
   if (startPercent <= minEndPercent) {
     return 0;
@@ -101,30 +75,20 @@ function calculateMaxDistance(startPercent, minEndPercent, batteryCapacityKwh, r
   return maxDistance;
 }
 
-/**
- * Calculate charging time using a modified logistic model
- * @param {number} currentPercent - Current battery percentage
- * @param {number} targetPercent - Target battery percentage
- * @param {number} chargerPowerKw - Charger power in kW
- * @param {number} batteryCapacityKwh - Battery capacity in kWh
- * @param {number} chargingEfficiency - Charging efficiency factor
- * @param {number} k - Logistic curve parameter
- * @returns {number} Charging time in hours
- */
+
 function evChargingTime(currentPercent, targetPercent, chargerPowerKw, batteryCapacityKwh = 60, chargingEfficiency = 0.9, k = 1.6) {
   if (!(0 <= currentPercent && currentPercent <= 100 && 0 <= targetPercent && targetPercent <= 100)) {
     throw new Error("Percentages must be between 0 and 100");
   }
   
-  // Special cases to avoid math errors
   if (currentPercent >= targetPercent) {
     return 0.0;
   }
   if (currentPercent === 0) {
-    currentPercent = 0.1; // Avoid division by zero
+    currentPercent = 0.1;
   }
   if (targetPercent === 100) {
-    targetPercent = 99.9; // Avoid division by zero
+    targetPercent = 99.9;
   }
   
   try {
@@ -137,24 +101,17 @@ function evChargingTime(currentPercent, targetPercent, chargerPowerKw, batteryCa
     const logisticScale = linearFullChargeTime / 7.43;
     return unitTime * logisticScale;
   } catch (error) {
-    // Fallback to linear approximation if mathematical errors occur
     const linearFullChargeTime = batteryCapacityKwh / (chargerPowerKw * chargingEfficiency);
     return linearFullChargeTime * (targetPercent - currentPercent) / 100;
   }
 }
 
-/**
- * Gets route path and time estimation using Google Maps Directions API
- * @param {[number, number]} start - Starting coordinates [lat, lng]
- * @param {[number, number]} end - Ending coordinates [lat, lng]
- * @returns {Promise<{path: Array<[number, number]>, duration: number}>} Path and duration
- */
+
 async function getRoadPathAndTimeWithTraffic(start, end) {
   try {
     const [startLat, startLng] = start;
     const [endLat, endLng] = end;
     
-    // Make API request through our helper function
     const data = await makeGoogleMapsApiRequest('directions/json', {
       origin: `${startLat},${startLng}`,
       destination: `${endLat},${endLng}`,
@@ -187,12 +144,7 @@ async function getRoadPathAndTimeWithTraffic(start, end) {
   }
 }
 
-/**
- * Gets a point along a route at a specified distance
- * @param {Array<[number, number]>} routePoints - Array of route points
- * @param {number} distanceKm - Target distance in kilometers
- * @returns {[number, number]} Point along the route
- */
+
 function getPointAlongRoute(routePoints, distanceKm) {
   let totalDistance = 0;
   
@@ -208,16 +160,7 @@ function getPointAlongRoute(routePoints, distanceKm) {
   return routePoints[routePoints.length - 1];
 }
 
-/**
- * Searches for nearby EV charging stations
- * @param {[number, number]} current - Current location coordinates [lat, lng]
- * @param {[number, number]} location - Search location coordinates [lat, lng]
- * @param {number} maxRange - Maximum range in kilometers
- * @param {number} initialRadius - Initial search radius in meters
- * @param {number} maxRadius - Maximum search radius in meters
- * @param {number} step - Step size for increasing radius in meters
- * @returns {Promise<Array>} Array of charging stations
- */
+
 async function searchNearbyEvStations(current, location, maxRange, initialRadius = 50000, maxRadius = 150000, step = 25000) {
   const [lat, lng] = location;
   let radius = initialRadius;
@@ -226,7 +169,7 @@ async function searchNearbyEvStations(current, location, maxRange, initialRadius
     console.log(`Searching EV stations near [${lat}, ${lng}] within ${radius} meters...`);
     
     try {
-      // Make API request through our helper function
+      
       const data = await makeGoogleMapsApiRequest('place/nearbysearch/json', {
         location: `${lat},${lng}`,
         radius: radius.toString(),
@@ -239,14 +182,13 @@ async function searchNearbyEvStations(current, location, maxRange, initialRadius
         
         for (const place of data.results) {
           const stationLocation = [place.geometry.location.lat, place.geometry.location.lng];
-          // Only include stations that are within the maximum range
           if (getDistance(current, stationLocation) <= maxRange) {
             stations.push({
               name: place.name,
               location: stationLocation,
               vicinity: place.vicinity || '',
-              chargingSpeedKW: [30, 45, 60][Math.floor(Math.random() * 3)], // Random charging speed
-              waitTimeMin: Math.floor(Math.random() * 26) + 5 // Random wait time between 5-30 min
+              chargingSpeedKW: [30, 45, 60][Math.floor(Math.random() * 3)],
+              waitTimeMin: Math.floor(Math.random() * 26) + 5
             });
           }
         }
@@ -266,25 +208,14 @@ async function searchNearbyEvStations(current, location, maxRange, initialRadius
   return [];
 }
 
-/**
- * Filters stations that are closer to destination than current location
- * @param {Array} stations - Array of charging stations
- * @param {[number, number]} current - Current coordinates [lat, lng]
- * @param {[number, number]} destination - Destination coordinates [lat, lng]
- * @returns {Array} Filtered stations
- */
+
 function filterStationsTowardDestination(stations, current, destination) {
   return stations.filter(station => 
     getDistance(station.location, destination) < getDistance(current, destination)
   );
 }
 
-/**
- * Scores stations based on their proximity to destination
- * @param {Array} stations - Array of charging stations
- * @param {[number, number]} destination - Destination coordinates [lat, lng]
- * @returns {Array} Scored stations
- */
+
 function scoreStations(stations, destination) {
   return stations
     .map(station => {
@@ -294,18 +225,12 @@ function scoreStations(stations, destination) {
     .sort((a, b) => b.score - a.score);
 }
 
-/**
- * Gets the road distance between two points using Google Maps API
- * @param {[number, number]} start - Starting coordinates [lat, lng]
- * @param {[number, number]} end - Ending coordinates [lat, lng]
- * @returns {Promise<number>} Distance in kilometers
- */
+
 async function getRoadDistance(start, end) {
   try {
     const [startLat, startLng] = start;
     const [endLat, endLng] = end;
     
-    // Make API request through our helper function
     const data = await makeGoogleMapsApiRequest('directions/json', {
       origin: `${startLat},${startLng}`,
       destination: `${endLat},${endLng}`,
@@ -317,25 +242,16 @@ async function getRoadDistance(start, end) {
       return getDistance(start, end);
     }
     
-    // Distance in meters, convert to kilometers
     return data.routes[0].legs[0].distance.value / 1000;
   } catch (error) {
     console.error("Error getting road distance:", error);
-    // Fallback to Haversine formula
     return getDistance(start, end);
   }
 }
 
-/**
- * Plans an EV route
- * @param {[number, number]} start - Starting coordinates [lat, lng]
- * @param {[number, number]} destination - Destination coordinates [lat, lng]
- * @param {number} batteryPercentage - Initial battery percentage
- * @param {number} fullRangeKm - Maximum range in kilometers on full battery
- * @returns {Promise<Object>} Route information
- */
-export async function planEvRoute(start, destination, batteryPercentage, fullRangeKm) {
-  const reservePercentage = 10; // internally defined
+
+export async function planEvRoute(start, destination, batteryPercentage, fullRangeKm, batteryCapacityKWh = 60) {
+  const reservePercentage = 10;
   let current = start;
   const route = [start];
   let remainingBattery = batteryPercentage;
@@ -344,14 +260,12 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
   let totalDriveTimeSec = 0;
   let totalChargingTimeMin = 0;
   let totalWaitTimeMin = 0;
-  const batteryCapacityKWh = 60;
   
   const logs = [];
   let success = false;
   
   function log(message) {
     console.log(message);
-    // Add spacing between major log sections using empty lines
     if (message.startsWith("Current location") || 
         message.startsWith("Found") || 
         message.startsWith("No ") || 
@@ -359,37 +273,32 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
         message.startsWith("Destination") ||
         message.startsWith("Trip Summary") ||
         message.startsWith("Targeting")) {
-      logs.push("");  // Add empty line before major sections
+      logs.push("");
     }
     logs.push(message);
   }
   
   while (true) {
-    // Use Google Maps API for the first distance calculation
     let distanceToDest;
-      // For the first calculation (source to destination), use Google Maps API
-      distanceToDest = await getRoadDistance(current, destination);
+    distanceToDest = await getRoadDistance(current, destination);
     
     const usableBatteryPercentage = remainingBattery - reservePercentage;
     
-    // Calculate max range using the new algorithm
     const maxRange = calculateMaxDistance(
-      remainingBattery,       // startPercent
-      10,                     // minEndPercent
-      batteryCapacityKWh,     // batteryCapacityKwh
-      fullRangeKm,            // rangeKm
-      0.95                    // baseDischargeEfficiency
+      remainingBattery,
+      10,
+      batteryCapacityKWh,
+      fullRangeKm,
+      0.95
     );
     
-    // Apply traffic factor
-    const trafficFactor = 0.95 + (Math.random() * 0.05); // Random between 0.95 and 1.00
+    const trafficFactor = 0.95 + (Math.random() * 0.05);
     const adjustedMaxRange = maxRange * trafficFactor;
     
     log(`Current location: [${current[0].toFixed(4)}, ${current[1].toFixed(4)}]`);
     log(`Distance to destination: ${distanceToDest.toFixed(2)} km`);
     log(`Battery: ${remainingBattery.toFixed(2)}% | Usable: ${usableBatteryPercentage.toFixed(2)}% | Max range: ${adjustedMaxRange.toFixed(2)} km`);
     
-    // Check if we can reach destination directly with buffer
     const batteryNeededForDest = (distanceToDest / fullRangeKm) * 100;
     if (usableBatteryPercentage >= batteryNeededForDest && remainingBattery - batteryNeededForDest >= 20) {
       log("Destination is within range with 20% buffer. Driving directly.");
@@ -424,18 +333,16 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
       break;
     }
     
-    // Score and filter for reachable stations
     const scoredStations = [];
     
     for (const station of filtered) {
       const distanceToStation = getDistance(current, station.location);
-      const batteryRequired = (distanceToStation / (maxRange * 0.9)) * 100;
+      const batteryRequired = (distanceToStation / fullRangeKm) * 100;
       
       if (batteryRequired > usableBatteryPercentage) {
-        continue; // Skip station that requires too much battery
+        continue;
       }
       
-      // Add additional properties to the station
       station.batteryUsed = batteryRequired;
       station.distanceToStation = distanceToStation;
       station.distanceToDest = getDistance(station.location, destination);
@@ -449,13 +356,10 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
       break;
     }
     
-    // Sort stations by score (highest first)
     scoredStations.sort((a, b) => b.score - a.score);
     
-    // Display reachable stations with their scores
     log(`Found ${scoredStations.length} reachable charging stations:`);
     
-    // Show top stations with more details (limited to 5 or less)
     const topStations = scoredStations.slice(0, Math.min(5, scoredStations.length));
     topStations.forEach((station, index) => {
       log(`${index + 1}. ${station.name} (${station.vicinity})`);
@@ -463,7 +367,6 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
       log(`   Distance to destination: ${station.distanceToDest.toFixed(2)} km | Charging: ${station.chargingSpeedKW} kW | Wait: ${station.waitTimeMin} min`);
     });
     
-    // Select the best station (first one after sorting)
     const best = scoredStations[0];
     
     log(`Going to charge at: ${best.name} (${best.vicinity})`);
@@ -475,10 +378,9 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
     
     remainingBattery -= best.batteryUsed;
     
-    // Calculate optimal charge target based on distance to destination
     const distanceToDestFromStation = getDistance(best.location, destination);
     const batteryNeededFromStation = (distanceToDestFromStation / fullRangeKm) * 100;
-    let targetBattery = batteryNeededFromStation + reservePercentage + 20; // Add 20% buffer
+    let targetBattery = batteryNeededFromStation + reservePercentage + 20;
     
     if (targetBattery < 100) {
       log(`Partial charge to ${targetBattery.toFixed(1)}% (enough to reach destination + reserve)`);
@@ -487,12 +389,11 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
       log("Full charge to 100%");
     }
     
-    // Calculate charging time using the new algorithm
     const chargingTimeHr = evChargingTime(
-      remainingBattery,      // currentPercent
-      targetBattery,         // targetPercent
-      best.chargingSpeedKW,  // chargerPowerKw
-      batteryCapacityKWh     // batteryCapacityKwh
+      remainingBattery,
+      targetBattery,
+      best.chargingSpeedKW,
+      batteryCapacityKWh
     );
     
     const chargingTimeMin = chargingTimeHr * 60;
@@ -549,6 +450,5 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
   };
 }
 
-// Re-export the server function for client use
 export { planEvRoute as clientPlanEvRoute };
 export { serverPlanEvRoute }; 

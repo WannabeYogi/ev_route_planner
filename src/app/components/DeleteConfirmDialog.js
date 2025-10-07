@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 
 export default function DeleteConfirmDialog({ isOpen, onClose, onConfirm, title, message }) {
-  // Close on escape key press
   useEffect(() => {
     const handleEscapeKey = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -13,7 +12,6 @@ export default function DeleteConfirmDialog({ isOpen, onClose, onConfirm, title,
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscapeKey);
-      // Prevent scrolling when dialog is open
       document.body.style.overflow = 'hidden';
     }
 
@@ -28,11 +26,11 @@ export default function DeleteConfirmDialog({ isOpen, onClose, onConfirm, title,
   return (
     <div 
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
-      onClick={onClose} // Close when clicking outside
+      onClick={onClose}
     >
       <div 
         className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 animate-fade-in"
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside dialog
+        onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-xl font-semibold text-gray-900 mb-4">{title || 'Confirm'}</h3>
         <p className="text-gray-600 mb-6">{message || 'Are you sure you want to proceed?'}</p>

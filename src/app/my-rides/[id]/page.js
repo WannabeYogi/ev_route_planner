@@ -22,13 +22,12 @@ export default function RideDetailsPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
-    // Redirect if not authenticated
     if (status === 'unauthenticated') {
       router.push('/login?callbackUrl=/my-rides/' + rideId);
       return;
     }
 
-    // Fetch ride details if authenticated
+    
     if (status === 'authenticated' && rideId) {
       fetchRideDetails();
     }
@@ -81,14 +80,14 @@ export default function RideDetailsPage() {
     setShowDeleteDialog(false);
   };
 
-  // Helper function to format time in hours and minutes
+  
   const formatTime = (timeInHours) => {
     if (timeInHours === undefined || timeInHours === null) return 'N/A';
     
     const hours = Math.floor(timeInHours);
     const minutes = Math.round((timeInHours - hours) * 60);
     
-    // Handle correct singular/plural forms
+    
     const hourText = hours === 1 ? 'hr' : 'hrs';
     const minuteText = minutes === 1 ? 'min' : 'mins';
     
@@ -101,28 +100,28 @@ export default function RideDetailsPage() {
     }
   };
 
-  // Function to open Google Maps with the route
+  
   const openInGoogleMaps = () => {
     if (!ride || !ride.route || ride.route.length < 2) return;
     
-    // Get start and destination coordinates
+    
     const start = ride.route[0];
     const destination = ride.route[ride.route.length - 1];
     
-    // Format waypoints from charging stops
+    
     const waypoints = ride.chargingStops
       .map(stop => `${stop.location[0]},${stop.location[1]}`)
       .join('|');
     
-    // Construct Google Maps URL
+    
     let mapUrl = `https://www.google.com/maps/dir/?api=1&origin=${start.lat},${start.lng}&destination=${destination.lat},${destination.lng}`;
     
-    // Add waypoints if available
+    
     if (waypoints) {
       mapUrl += `&waypoints=${waypoints}&travelmode=driving`;
     }
     
-    // Open in new tab
+    
     window.open(mapUrl, '_blank');
   };
 
@@ -195,7 +194,7 @@ export default function RideDetailsPage() {
     );
   }
 
-  // Format the routeData for the GoogleMap component
+  
   const routeData = {
     route: ride.route.map(point => [point.lat, point.lng]),
     chargingStops: ride.chargingStops,
@@ -206,7 +205,6 @@ export default function RideDetailsPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      {/* Custom Delete Dialog Component */}
       <DeleteConfirmDialog 
         isOpen={showDeleteDialog}
         onClose={cancelDelete}
@@ -237,7 +235,6 @@ export default function RideDetailsPage() {
           
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div className="w-full md:w-3/4">
-              {/* Source location box - styled like main page */}
               <div className="relative mb-3">
                 <div className="absolute left-4 top-1/2 -mt-1 w-2 h-2 bg-black rounded-full"></div>
                 <div className="input-field pl-8 pr-4 w-full py-2.5 flex items-center">
@@ -245,7 +242,6 @@ export default function RideDetailsPage() {
                 </div>
               </div>
               
-              {/* Destination location box - styled like main page */}
               <div className="relative mb-4">
                 <div className="absolute left-4 top-1/2 -mt-1 w-2 h-2 bg-gray-600 rounded-full"></div>
                 <div className="input-field pl-8 pr-4 w-full py-2.5 flex items-center">
@@ -277,7 +273,6 @@ export default function RideDetailsPage() {
             </div>
           </div>
           
-          {/* Map */}
           <div className="h-[50vh] rounded-lg overflow-hidden shadow-lg mb-6">
             <GoogleMap 
               startLocation={{lat: ride.sourceLocation.lat, lng: ride.sourceLocation.lng}}
@@ -286,7 +281,7 @@ export default function RideDetailsPage() {
             />
           </div>
           
-          {/* Trip Summary */}
+          
           <div className="bg-white rounded-lg shadow-md p-5 mb-6">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Trip Summary</h2>
             
@@ -333,7 +328,7 @@ export default function RideDetailsPage() {
                 <div>
                   <p className="text-sm text-gray-600 font-medium">Route Distance</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {/* Calculate approximate distance based on driving time and average speed */}
+                    
                     {Math.round(ride.routeSummary.drivingTime * 60)} km
                   </p>
                 </div>
@@ -341,7 +336,7 @@ export default function RideDetailsPage() {
             </div>
           </div>
           
-          {/* Charging Stops */}
+          
           {ride.chargingStops.length > 0 && (
             <div className="bg-white rounded-lg shadow-md p-5 mb-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4">Charging Stops</h2>
@@ -378,7 +373,7 @@ export default function RideDetailsPage() {
                         </div>
                       </div>
                       
-                      {/* Battery status with tooltip */}
+                      
                       <div className="flex items-center justify-between bg-gray-50 p-2 rounded relative group">
                         <div className="text-xs text-gray-700">
                           Battery: {stop.batteryBefore !== undefined ? `${Math.round(stop.batteryBefore)}%` : 'N/A'} → {stop.batteryAfter !== undefined ? `${Math.round(stop.batteryAfter)}%` : 'N/A'}
@@ -398,7 +393,7 @@ export default function RideDetailsPage() {
                           </div>
                         </div>
                         
-                        {/* Tooltip */}
+                        
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none w-48 z-10">
                           <div className="font-semibold mb-1">Battery Indicator:</div>
                           <div className="flex items-center mb-1">

@@ -46,7 +46,6 @@ export default function RegisterPage() {
     setIsLoading(true);
     
     try {
-      // Register user
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -65,7 +64,6 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Registration failed');
       }
       
-      // Sign in the user after successful registration
       const result = await signIn('credentials', {
         redirect: false,
         email: formData.email,

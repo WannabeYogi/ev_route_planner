@@ -5,7 +5,6 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 import connectToDatabase from '@/app/utils/mongodb';
 import { getServerSession } from 'next-auth/next';
 
-// GET - Fetch a specific ride by ID
 export async function GET(request, context) {
   try {
     const { id } = await context.params;
@@ -20,7 +19,6 @@ export async function GET(request, context) {
     
     await connectToDatabase();
     
-    // Find the user by ID from the session
     const user = await User.findById(session.user.id);
     
     if (!user) {
@@ -39,7 +37,6 @@ export async function GET(request, context) {
       );
     }
     
-    // Check if the ride belongs to the user
     if (ride.user.toString() !== user._id.toString()) {
       return NextResponse.json(
         { error: 'Unauthorized to access this ride' },
@@ -57,7 +54,6 @@ export async function GET(request, context) {
   }
 }
 
-// DELETE - Delete a specific ride
 export async function DELETE(request, context) {
   try {
     const { id } = await context.params;
@@ -72,7 +68,6 @@ export async function DELETE(request, context) {
     
     await connectToDatabase();
     
-    // Find the user by ID from the session
     const user = await User.findById(session.user.id);
     
     if (!user) {
@@ -91,7 +86,6 @@ export async function DELETE(request, context) {
       );
     }
     
-    // Check if the ride belongs to the user
     if (ride.user.toString() !== user._id.toString()) {
       return NextResponse.json(
         { error: 'Unauthorized to delete this ride' },
@@ -99,13 +93,11 @@ export async function DELETE(request, context) {
       );
     }
     
-    // Remove the ride from the user's savedRides array
     await User.findByIdAndUpdate(
       user._id,
       { $pull: { savedRides: id } }
     );
     
-    // Delete the ride
     await SavedRide.findByIdAndDelete(id);
     
     return NextResponse.json(

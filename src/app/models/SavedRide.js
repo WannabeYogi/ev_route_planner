@@ -6,7 +6,6 @@ const SavedRideSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  // Source and destination information
   sourceLocation: {
     name: String,
     lat: Number,
@@ -17,7 +16,6 @@ const SavedRideSchema = new mongoose.Schema({
     lat: Number,
     lng: Number
   },
-  // Vehicle information
   batteryPercentage: {
     type: Number,
     required: true
@@ -26,15 +24,13 @@ const SavedRideSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  // Route summary
   routeSummary: {
-    drivingTime: Number, // in hours
-    chargingTime: Number, // in hours
-    waitTime: Number, // in hours
-    totalTime: Number // in hours
+    drivingTime: Number,
+    chargingTime: Number,
+    waitTime: Number,
+    totalTime: Number
   },
-  // Full route data
-  route: [{ lat: Number, lng: Number }], // Array of coordinates
+  route: [{ lat: Number, lng: Number }],
   chargingStops: [{
     name: String,
     location: [Number], // [lat, lng]
@@ -45,12 +41,10 @@ const SavedRideSchema = new mongoose.Schema({
     batteryBefore: Number,
     batteryAfter: Number
   }],
-  // Success status
   success: {
     type: Boolean,
     default: true
   },
-  // Creation timestamp
   createdAt: {
     type: Date,
     default: Date.now

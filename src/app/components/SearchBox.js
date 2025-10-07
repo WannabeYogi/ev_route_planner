@@ -12,37 +12,30 @@ export default function SearchBox({ placeholder, onLocationSelect, value, onFocu
   const autocompleteRef = useRef(null);
   const suggestionBoxRef = useRef(null);
 
-  // Use our shared Google Maps loader
   const { isLoaded, loadError, maps } = useGoogleMaps();
 
-  // Update searchText when value prop changes
   useEffect(() => {
     setSearchText(value || '');
   }, [value]);
 
-  // Initialize Google Maps Autocomplete when the script is loaded
   useEffect(() => {
     if (!isLoaded || !maps || !inputRef.current) return;
 
     try {
-      // Create autocomplete instance
       autocompleteRef.current = new maps.places.Autocomplete(inputRef.current, {
         componentRestrictions: { country: 'in' }, // Restrict to India
         fields: ['address_components', 'geometry', 'name', 'formatted_address', 'place_id'],
         types: ['geocode', 'establishment'], // Search for addresses and establishments
       });
 
-      // Add listener for place selection
       const listener = autocompleteRef.current.addListener('place_changed', () => {
         const place = autocompleteRef.current.getPlace();
         
         if (!place.geometry) {
-          // User entered the name of a place that was not suggested
           console.error('No details available for this place');
           return;
         }
 
-        // Get the place details
         const location = {
           name: place.formatted_address,
           lat: place.geometry.location.lat(),
@@ -56,7 +49,6 @@ export default function SearchBox({ placeholder, onLocationSelect, value, onFocu
       });
 
       return () => {
-        // Cleanup listener when component unmounts
         if (autocompleteRef.current && maps) {
           maps.event.removeListener(listener);
         }
@@ -66,7 +58,6 @@ export default function SearchBox({ placeholder, onLocationSelect, value, onFocu
     }
   }, [isLoaded, maps, onLocationSelect]);
 
-  // Handle click outside suggestions box
   useEffect(() => {
     function handleClickOutside(event) {
       if (suggestionBoxRef.current && !suggestionBoxRef.current.contains(event.target)) {
@@ -81,7 +72,6 @@ export default function SearchBox({ placeholder, onLocationSelect, value, onFocu
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchText(value);
-    // We don't need to manually fetch suggestions, Google's autocomplete handles this
   };
 
   const handleInputFocus = () => {
@@ -89,7 +79,6 @@ export default function SearchBox({ placeholder, onLocationSelect, value, onFocu
     if (onFocus) onFocus();
   };
 
-  // If Google Maps fails to load, still allow manual input without autocomplete
   if (loadError) {
     return (
       <div className="relative w-full">
@@ -98,7 +87,6 @@ export default function SearchBox({ placeholder, onLocationSelect, value, onFocu
           value={searchText}
           onChange={(e) => {
             setSearchText(e.target.value);
-            // Allow user to set location manually even without the API
             if (e.target.value) {
               onLocationSelect({ 
                 name: e.target.value, 

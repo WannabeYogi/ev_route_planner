@@ -1,0 +1,298 @@
+{
+    "MAHINDRA": [
+        {
+            "MODEL": "BE 6",
+            "BATTERY-KWH": 79,
+            "RANGE-KM": 683
+        },
+        {
+            "MODEL": "XEV 9E",
+            "BATTERY-KWH": 79,
+            "RANGE-KM": 656
+        },
+        {
+            "MODEL": "XUV400",
+            "BATTERY-KWH": 39.2,
+            "RANGE-KM": 456
+        }
+    ],
+    "TATA": [
+        {
+            "MODEL": "NEXON",
+            "BATTERY-KWH": 46,
+            "RANGE-KM": 489
+        },
+        {
+            "MODEL": "HARRIER",
+            "BATTERY-KWH": 75,
+            "RANGE-KM": 627
+        },
+        {
+            "MODEL": "TIAGO",
+            "BATTERY-KWH": 24,
+            "RANGE-KM": 315
+        },
+        {
+            "MODEL": "PUNCH",
+            "BATTERY-KWH": 35,
+            "RANGE-KM": 421
+        },
+        {
+            "MODEL": "CURVV",
+            "BATTERY-KWH": 55,
+            "RANGE-KM": 502
+        },
+        {
+            "MODEL": "TIGOR",
+            "BATTERY-KWH": 26,
+            "RANGE-KM": 315
+        }
+    ],
+    "KIA": [
+        {
+            "MODEL": "EV6",
+            "BATTERY-KWH": 84,
+            "RANGE-KM": 663
+        },
+        {
+            "MODEL": "CLAVIS",
+            "BATTERY-KWH": 51.4,
+            "RANGE-KM": 490
+        },
+        {
+            "MODEL": "EV9",
+            "BATTERY-KWH": 99.8,
+            "RANGE-KM": 561
+        }
+    ],
+    "HYUNDAI": [
+        {
+            "MODEL": "CRETA",
+            "BATTERY-KWH": 51.4,
+            "RANGE-KM": 510
+        },
+        {
+            "MODEL": "IONIQ 5",
+            "BATTERY-KWH": 72.6,
+            "RANGE-KM": 631
+        },
+        {
+            "MODEL": "WINDSOR",
+            "BATTERY-KWH": 52.9,
+            "RANGE-KM": 449
+        }
+    ],
+    "MG": [
+        {
+            "MODEL": "COMET",
+            "BATTERY-KWH": 17.4,
+            "RANGE-KM": 230
+        },
+        {
+            "MODEL": "CYBERSTER",
+            "BATTERY-KWH": 77,
+            "RANGE-KM": 580
+        },
+        {
+            "MODEL": "M9",
+            "BATTERY-KWH": 90,
+            "RANGE-KM": 548
+        },
+        {
+            "MODEL": "ZS",
+            "BATTERY-KWH": 50.3,
+            "RANGE-KM": 461
+        }
+    ],
+    "CITROEN": [
+        {
+            "MODEL": "EC3",
+            "BATTERY-KWH": 29.2,
+            "RANGE-KM": 320
+        }
+    ],
+    "AUDI": [
+        {
+            "MODEL": "RS ETRON GT",
+            "BATTERY-KWH": 93,
+            "RANGE-KM": 481
+        },
+        {
+            "MODEL": "ETRON GT",
+            "BATTERY-KWH": 93,
+            "RANGE-KM": 500
+        },
+        {
+            "MODEL": "Q8 SPORTBACK",
+            "BATTERY-KWH": 114,
+            "RANGE-KM": 600
+        },
+        {
+            "MODEL": "Q8 ETRON",
+            "BATTERY-KWH": 106,
+            "RANGE-KM": 582
+        }
+    ],
+    "BMW": [
+        {
+            "MODEL": "IX",
+            "BATTERY-KWH": 111.5,
+            "RANGE-KM": 575
+        },
+        {
+            "MODEL": "IX1",
+            "BATTERY-KWH": 66.4,
+            "RANGE-KM": 531
+        },
+        {
+            "MODEL": "I7",
+            "BATTERY-KWH": 101.7,
+            "RANGE-KM": 625
+        },
+        {
+            "MODEL": "I4",
+            "BATTERY-KWH": 83.9,
+            "RANGE-KM": 590
+        },
+        {
+            "MODEL": "I5",
+            "BATTERY-KWH": 83.9,
+            "RANGE-KM": 516
+        }
+    ],
+    "BYD": [
+        {
+            "MODEL": "ATTO 3",
+            "BATTERY-KWH": 60.5,
+            "RANGE-KM": 521
+        },
+        {
+            "MODEL": "SEAL",
+            "BATTERY-KWH": 82.56,
+            "RANGE-KM": 650
+        },
+        {
+            "MODEL": "SEALION 7",
+            "BATTERY-KWH": 82.56,
+            "RANGE-KM": 567
+        },
+        {
+            "MODEL": "EMAX 7",
+            "BATTERY-KWH": 71.8,
+            "RANGE-KM": 530
+        }
+    ],
+    "MERCEDES-BENZ": [
+        {
+            "MODEL": "G-CLASS",
+            "BATTERY-KWH": 116,
+            "RANGE-KM": 473
+        },
+        {
+            "MODEL": "EQS SUV",
+            "BATTERY-KWH": 122,
+            "RANGE-KM": 820
+        },
+        {
+            "MODEL": "EQB",
+            "BATTERY-KWH": 70.5,
+            "RANGE-KM": 535
+        },
+        {
+            "MODEL": "EQE SUV",
+            "BATTERY-KWH": 90.56,
+            "RANGE-KM": 595
+        },
+        {
+            "MODEL": "EQS SUV MAYBACH",
+            "BATTERY-KWH": 122,
+            "RANGE-KM": 611
+        },
+        {
+            "MODEL": "EQS",
+            "BATTERY-KWH": 107.8,
+            "RANGE-KM": 587
+        },
+        {
+            "MODEL": "EQA",
+            "BATTERY-KWH": 70.5,
+            "RANGE-KM": 560
+        },
+        {
+            "MODEL": "AMG EQS",
+            "BATTERY-KWH": 107.8,
+            "RANGE-KM": 526
+        }
+    ],
+    "MINI": [
+        {
+            "MODEL": "COOPER SE",
+            "BATTERY-KWH": 32.6,
+            "RANGE-KM": 270
+        },
+        {
+            "MODEL": "COUNTRYMAN",
+            "BATTERY-KWH": 66.4,
+            "RANGE-KM": 462
+        }
+    ],
+    "VOLVO": [
+        {
+            "MODEL": "EC40",
+            "BATTERY-KWH": 78,
+            "RANGE-KM": 530
+        },
+        {
+            "MODEL": "EX40",
+            "BATTERY-KWH": 78,
+            "RANGE-KM": 592
+        }
+    ],
+    "PMV": [
+        {
+            "MODEL": "EASE",
+            "BATTERY-KWH": 10,
+            "RANGE-KM": 160
+        }
+    ],
+    "PORSCHE": [
+        {
+            "MODEL": "TAYCAN",
+            "BATTERY-KWH": 93.4,
+            "RANGE-KM": 705
+        },
+        {
+            "MODEL": "MACAN",
+            "BATTERY-KWH": 100,
+            "RANGE-KM": 624
+        }
+    ],
+    "PRAVAIG": [
+        {
+            "MODEL": "DEFY",
+            "BATTERY-KWH": 90.9,
+            "RANGE-KM": 500
+        }
+    ],
+    "STROM MOTORS": [
+        {
+            "MODEL": "R3",
+            "BATTERY-KWH": 30,
+            "RANGE-KM": 200
+        }
+    ],
+    "TESLA": [
+        {
+            "MODEL": "MODEL Y",
+            "BATTERY-KWH": 90,
+            "RANGE-KM": 622
+        }
+    ],
+    "VAYYE MOBILITY": [
+        {
+            "MODEL": "EVA",
+            "BATTERY-KWH": 18,
+            "RANGE-KM": 250
+        }
+    ]
+}
