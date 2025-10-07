@@ -8,7 +8,6 @@ import Link from 'next/link';
 import Navbar from '@/app/components/Navbar';
 import { signIn } from 'next-auth/react';
 
-// SearchParams wrapper component to handle the params with Suspense
 function SearchParamsWrapper({ children }) {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';

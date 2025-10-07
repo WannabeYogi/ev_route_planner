@@ -4,17 +4,14 @@ import { createContext, useContext, useEffect, useState } from 'react';
 
 import { Loader } from '@googlemaps/js-api-loader';
 
-// Ensure we have a valid API key
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-// Create a context to share Google Maps loading state
 const GoogleMapsContext = createContext({
   isLoaded: false,
   loadError: null,
   maps: null,
 });
 
-// Set up a single Google Maps loader instance
 const loader = new Loader({
   apiKey: MAPS_API_KEY,
   version: 'quarterly',
@@ -23,7 +20,6 @@ const loader = new Loader({
   region: 'IN',
 });
 
-// Track if the script has been loaded
 let isLoading = false;
 let mapsInstance = null;
 
@@ -33,7 +29,6 @@ export function GoogleMapsProvider({ children }) {
   const [maps, setMaps] = useState(null);
 
   useEffect(() => {
-    // Only load once
     if (isLoading || isLoaded || mapsInstance) return;
     
     isLoading = true;
@@ -55,7 +50,6 @@ export function GoogleMapsProvider({ children }) {
       });
       
     return () => {
-      // Don't clean up the loader as we want to keep it for the entire session
     };
   }, []);
 

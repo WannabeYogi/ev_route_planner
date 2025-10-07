@@ -5,7 +5,6 @@ import { authOptions } from '../auth/[...nextauth]/route';
 import connectToDatabase from '@/app/utils/mongodb';
 import { getServerSession } from 'next-auth/next';
 
-// GET - Fetch user's saved rides
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -19,7 +18,6 @@ export async function GET(request) {
     
     await connectToDatabase();
     
-    // Find the user by ID from the session
     const user = await User.findById(session.user.id);
     
     if (!user) {
@@ -42,7 +40,6 @@ export async function GET(request) {
   }
 }
 
-// POST - Save a new ride
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -63,7 +60,6 @@ export async function POST(request) {
       routeData
     } = body;
     
-    // Basic validation
     if (!sourceLocation || !destinationLocation || !batteryPercentage || !batteryRange || !routeData) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -73,7 +69,6 @@ export async function POST(request) {
     
     await connectToDatabase();
     
-    // Find the user by ID from the session
     const user = await User.findById(session.user.id);
     
     if (!user) {
@@ -83,7 +78,6 @@ export async function POST(request) {
       );
     }
     
-    // Check for duplicate rides based on source, destination, battery percentage, and range
     const existingRide = await SavedRide.findOne({
       user: user._id,
       'sourceLocation.lat': sourceLocation.lat,
@@ -97,11 +91,10 @@ export async function POST(request) {
     if (existingRide) {
       return NextResponse.json(
         { error: 'This ride has already been saved', existingRideId: existingRide._id },
-        { status: 409 } // 409 Conflict status code
+        { status: 409 }
       );
     }
     
-    // Create the saved ride
     const savedRide = await SavedRide.create({
       user: user._id,
       sourceLocation: {
@@ -127,7 +120,6 @@ export async function POST(request) {
       success: routeData.success
     });
     
-    // Update user's savedRides array
     await User.findByIdAndUpdate(
       user._id,
       { $push: { savedRides: savedRide._id } }

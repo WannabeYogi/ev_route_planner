@@ -31,10 +31,8 @@ export default function Home() {
   const [routeError, setRouteError] = useState(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
-  // Use our shared Google Maps loader
   const { isLoaded, maps } = useGoogleMaps();
 
-  // Get user's current location on mount
   useEffect(() => {
     if (isLoaded) {
       getCurrentLocation();
@@ -74,7 +72,6 @@ export default function Home() {
                 setIsLoadingLocation(false);
               });
             } else {
-              // Fallback if Google Maps isn't loaded
               setMapLocations(prev => ({
                 ...prev,
                 userLocation: { lat: latitude, lng: longitude },
@@ -122,7 +119,6 @@ export default function Home() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    // Validate battery percentage to not exceed 100
     if (name === 'batteryPercentage' && parseInt(value) > 100) {
       setFormData(prev => ({
         ...prev,
@@ -140,19 +136,16 @@ export default function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate all fields are filled
     if (!mapLocations.source || !mapLocations.destination || !formData.batteryPercentage || !formData.batteryRange) {
       setRouteError('Please fill in all fields (source, destination, battery percentage, and range)');
       return;
     }
     
-    // Reset previous data
     setRouteData(null);
     setRouteError(null);
     setIsLoadingRoute(true);
     
     try {
-      // Call our API route
       const response = await fetch('/api/route', {
         method: 'POST',
         headers: {
@@ -174,7 +167,6 @@ export default function Home() {
       const data = await response.json();
       setRouteData(data);
       
-      // Scroll to summary
       const summaryElement = document.getElementById('route-summary');
       if (summaryElement) {
         summaryElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -194,7 +186,6 @@ export default function Home() {
       <main className="flex-1 pt-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            {/* Form Section - Always First on Mobile */}
             <div className="py-6 sm:py-8 lg:py-12">
               <div className="max-w-[450px] mx-auto lg:mx-0">
                 <h1 className="text-3xl sm:text-4xl font-bold text-black mb-3 sm:mb-4">
@@ -316,7 +307,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Map Container */}
             <div className="lg:order-2">
               <div className="h-[50vh] lg:h-[calc(100vh-8rem)] w-full rounded-lg overflow-hidden shadow-lg">
                 <GoogleMap 
@@ -328,7 +318,6 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Route Summary Section */}
           <div id="route-summary" className="mt-8">
             <RouteSummary 
               routeData={routeData}

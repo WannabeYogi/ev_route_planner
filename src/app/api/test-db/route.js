@@ -3,7 +3,6 @@ import connectToDatabase from '@/app/utils/mongodb';
 
 export async function GET() {
   try {
-    // Test database connection
     await connectToDatabase();
     
     return NextResponse.json(

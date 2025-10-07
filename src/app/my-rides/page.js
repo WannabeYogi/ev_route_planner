@@ -16,13 +16,11 @@ export default function MyRidesPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Redirect if not authenticated
     if (status === 'unauthenticated') {
       router.push('/login?callbackUrl=/my-rides');
       return;
     }
 
-    // Fetch rides if authenticated
     if (status === 'authenticated') {
       fetchRides();
     }
@@ -47,14 +45,13 @@ export default function MyRidesPage() {
     }
   };
 
-  // Helper function to format time in hours and minutes
   const formatTime = (timeInHours) => {
     if (timeInHours === undefined || timeInHours === null) return 'N/A';
     
     const hours = Math.floor(timeInHours);
     const minutes = Math.round((timeInHours - hours) * 60);
     
-    // Handle correct singular/plural forms
+    
     const hourText = hours === 1 ? 'hr' : 'hrs';
     const minuteText = minutes === 1 ? 'min' : 'mins';
     
@@ -143,7 +140,7 @@ export default function MyRidesPage() {
                       {new Date(ride.createdAt).toLocaleDateString()} at {new Date(ride.createdAt).toLocaleTimeString()}
                     </p>
                     
-                    {/* Source location box - styled like main page */}
+                    
                     <div className="relative mb-3">
                       <div className="absolute left-4 top-1/2 -mt-1 w-2 h-2 bg-black rounded-full"></div>
                       <div className="input-field pl-8 pr-4 w-full py-2.5 flex items-center">
@@ -151,7 +148,7 @@ export default function MyRidesPage() {
                       </div>
                     </div>
                     
-                    {/* Destination location box - styled like main page */}
+                    
                     <div className="relative mb-4">
                       <div className="absolute left-4 top-1/2 -mt-1 w-2 h-2 bg-gray-600 rounded-full"></div>
                       <div className="input-field pl-8 pr-4 w-full py-2.5 flex items-center">

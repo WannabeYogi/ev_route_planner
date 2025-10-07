@@ -24,44 +24,36 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
   const directionsService = useRef(null);
   const mapRef = useRef(null);
 
-  // Use our shared Google Maps loader
   const { isLoaded, loadError, maps } = useGoogleMaps();
 
-  // Handle map load
   const onLoad = useCallback((map) => {
     console.log('Map loaded successfully');
     mapRef.current = map;
     setMap(map);
   }, []);
 
-  // Handle map unmount
   const onUnmount = useCallback(() => {
     console.log('Map unmounted');
     mapRef.current = null;
     setMap(null);
   }, []);
 
-  // Calculate and display route from algorithm results if available
   useEffect(() => {
     if (!isLoaded || !maps || !map) return;
     
     if (routeData && routeData.route && routeData.route.length > 1) {
-      // Use route data from the algorithm
       console.log('Using route data from algorithm');
       
       try {
-        // Create a DirectionsService if it doesn't exist
         if (!directionsService.current) {
           directionsService.current = new maps.DirectionsService();
         }
 
-        // Create waypoints from route
         const waypoints = routeData.chargingStops.map(stop => ({
           location: new maps.LatLng(stop.location[0], stop.location[1]),
           stopover: true
         }));
 
-        // Calculate route with all charging stops as waypoints
         directionsService.current.route(
           {
             origin: new maps.LatLng(routeData.route[0][0], routeData.route[0][1]),
@@ -77,7 +69,6 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
             if (status === maps.DirectionsStatus.OK) {
               setDirections(result);
               
-              // Set bounds to fit the route
               const newBounds = new maps.LatLngBounds();
               result.routes[0].bounds.extend(result.routes[0].bounds.getNorthEast());
               result.routes[0].bounds.extend(result.routes[0].bounds.getSouthWest());
@@ -98,21 +89,17 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
       }
     }
     
-    // Fall back to direct route if no algorithm route data or it failed
     if (startLocation && destinationLocation) {
       try {
-        // Create directions service if it doesn't exist
         if (!directionsService.current) {
           directionsService.current = new maps.DirectionsService();
         }
 
-        // Create bounds to fit both locations
         const newBounds = new maps.LatLngBounds();
         newBounds.extend(new maps.LatLng(startLocation.lat, startLocation.lng));
         newBounds.extend(new maps.LatLng(destinationLocation.lat, destinationLocation.lng));
         setBounds(newBounds);
 
-        // Calculate direct route
         directionsService.current.route(
           {
             origin: { lat: startLocation.lat, lng: startLocation.lng },
@@ -137,7 +124,6 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
     }
   }, [isLoaded, maps, map, startLocation, destinationLocation, routeData]);
 
-  // Fit bounds when map and bounds are available
   useEffect(() => {
     if (map && bounds) {
       try {
@@ -148,7 +134,6 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
     }
   }, [map, bounds]);
 
-  // Set center to start location if only start is available
   useEffect(() => {
     if (map && startLocation && !destinationLocation && !routeData) {
       try {
@@ -160,7 +145,6 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
     }
   }, [map, startLocation, destinationLocation, routeData]);
 
-  // If there's a load error or other map error
   if (loadError || mapError) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-xl">
@@ -171,7 +155,6 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
     );
   }
 
-  // If the map is still loading
   if (!isLoaded) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-xl">
@@ -205,10 +188,8 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
           ],
         }}
       >
-        {/* If directions are not available, show individual markers */}
         {!directions && (
           <>
-            {/* Render start location marker */}
             {startLocation && (
               <Marker
                 position={{ lat: startLocation.lat, lng: startLocation.lng }}
@@ -220,7 +201,6 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
               />
             )}
 
-            {/* Render destination marker */}
             {destinationLocation && (
               <Marker
                 position={{ lat: destinationLocation.lat, lng: destinationLocation.lng }}
@@ -232,7 +212,6 @@ const MapComponent = ({ startLocation, destinationLocation, routeData }) => {
               />
             )}
 
-            {/* Render charging stations if available */}
             {routeData && routeData.chargingStops && routeData.chargingStops.map((stop, index) => (
               <Marker
                 key={`charging-${index}`}

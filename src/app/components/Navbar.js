@@ -27,7 +27,6 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6">
         <div className="flex h-16 items-center justify-between">
-          {/* Left side */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2">
               <Image
@@ -54,7 +53,6 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Right side */}
           <div className="flex items-center gap-6">
             <div className="hidden md:flex items-center gap-6">
               <Link href="/help" className="text-gray-600 hover:text-black text-sm font-medium">
@@ -119,7 +117,6 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile menu button */}
             <button
               className="md:hidden p-2 rounded-lg hover:bg-gray-100"
               onClick={toggleMobileMenu}
@@ -151,7 +148,6 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200">
             <div className="py-2 space-y-1">

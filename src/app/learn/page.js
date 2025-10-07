@@ -9,7 +9,7 @@ export default function Learn() {
       <Navbar />
 
       <main className="flex-grow mt-16">
-        {/* Hero Section */}
+        
         <div className="bg-blue-50 py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
@@ -21,9 +21,9 @@ export default function Learn() {
           </div>
         </div>
 
-        {/* Content Sections */}
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          {/* Future of EVs Section */}
+          
           <section className="mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-6">Future of Electric Vehicles</h2>
             <div className="prose max-w-none">
@@ -47,7 +47,7 @@ export default function Learn() {
             </div>
           </section>
 
-          {/* Charging Locations */}
+          
           <section className="mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-6">Where to Charge an Electric Car</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -69,7 +69,7 @@ export default function Learn() {
             </div>
           </section>
 
-          {/* Battery Life Section */}
+          
           <section className="mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-6">Battery Life and Range</h2>
             <div className="bg-gray-50 p-8 rounded-lg">

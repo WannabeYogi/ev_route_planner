@@ -7,13 +7,11 @@ import connectToDatabase from '@/app/utils/mongodb';
 
 export const authOptions = {
   providers: [
-    // Google Provider
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
     
-    // Credentials Provider for email/password login
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -46,22 +44,16 @@ export const authOptions = {
     })
   ],
   
-  // JWT Configuration
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   
-  // Custom pages (optional)
   pages: {
     signIn: '/login',
-    // signOut: '/auth/signout',
-    // error: '/auth/error',
   },
   
-  // Callbacks
   callbacks: {
-    // Add user info to token
     async jwt({ token, user, account, profile }) {
       if (user) {
         token.userId = user.userId;
@@ -70,7 +62,6 @@ export const authOptions = {
       return token;
     },
     
-    // Add user info to session
     async session({ session, token }) {
       if (session?.user && token) {
         session.user.id = token.id;
@@ -79,16 +70,13 @@ export const authOptions = {
       return session;
     },
     
-    // Handle sign in
     async signIn({ user, account, profile }) {
       if (account.provider === 'google') {
         try {
           await connectToDatabase();
           
-          // Check if user exists
           let dbUser = await User.findOne({ email: profile.email });
           
-          // If not, create new user
           if (!dbUser) {
             dbUser = await User.create({
               name: profile.name,
@@ -97,11 +85,9 @@ export const authOptions = {
               googleId: profile.sub
             });
             
-            // Add userId to user object for session
             user.userId = dbUser.userId;
             user.id = dbUser._id.toString();
           } else {
-            // Update googleId if it doesn't exist
             if (!dbUser.googleId) {
               await User.findByIdAndUpdate(dbUser._id, {
                 googleId: profile.sub,
@@ -109,7 +95,6 @@ export const authOptions = {
               },{new: true});
             }
             
-            // Add userId to user object for session
             user.userId = dbUser.userId;
             user.id = dbUser._id.toString();
           }
@@ -123,7 +108,6 @@ export const authOptions = {
     }
   },
   
-  // Secret for JWT encryption
   secret: process.env.NEXTAUTH_SECRET
 };
 

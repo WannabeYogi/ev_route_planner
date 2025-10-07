@@ -15,7 +15,6 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
     const hours = Math.floor(timeInHours);
     const minutes = Math.round((timeInHours - hours) * 60);
     
-    // Handle correct singular/plural forms
     const hourText = hours === 1 ? 'hr' : 'hrs';
     const minuteText = minutes === 1 ? 'min' : 'mins';
     
@@ -38,9 +37,8 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
     
     for (let i = 0; i < logs.length; i++) {
       const log = logs[i];
-      if (log === "") continue; // Skip empty lines
+      if (log === "") continue;
       
-      // Start a new stage based on key phrases
       if (log.startsWith("Current location") && i > 0) {
         stages.push(currentStage);
         currentStage = { title: 'Route Analysis', logs: [], icon: '🧭' };
@@ -65,7 +63,6 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
       currentStage.logs.push(log);
     }
     
-    // Add the last stage
     if (currentStage.logs.length > 0) {
       stages.push(currentStage);
     }
@@ -106,7 +103,6 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
       const data = await response.json();
       
       if (!response.ok) {
-        // Special handling for duplicate ride error (409 Conflict)
         if (response.status === 409 && data.existingRideId) {
           setSaveMessage({
             type: 'warning',
@@ -132,7 +128,6 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
         });
       }
       
-      // Clear message after 8 seconds
       setTimeout(() => {
         setSaveMessage({ type: '', text: '' });
       }, 8000);
@@ -152,24 +147,19 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
   const openInGoogleMaps = () => {
     if (!routeData || !routeData.route || routeData.route.length < 2) return;
     
-    // Get start and destination coordinates
     const start = routeData.route[0];
     const destination = routeData.route[routeData.route.length - 1];
     
-    // Format waypoints from charging stops
     const waypoints = routeData.chargingStops
       .map(stop => `${stop.location[0]},${stop.location[1]}`)
       .join('|');
     
-    // Construct Google Maps URL
     let mapUrl = `https://www.google.com/maps/dir/?api=1&origin=${start[0]},${start[1]}&destination=${destination[0]},${destination[1]}`;
     
-    // Add waypoints if available
     if (waypoints) {
       mapUrl += `&waypoints=${waypoints}&travelmode=driving`;
     }
     
-    // Open in new tab
     window.open(mapUrl, '_blank');
   };
   
@@ -202,7 +192,6 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
   
   return (
     <div className="bg-white rounded-lg shadow-md p-5 mt-6 mb-8 relative">
-      {/* Save message toast */}
       {saveMessage.text && (
         <div className={`absolute top-0 left-0 right-0 p-3 text-white text-center transform -translate-y-full rounded-t-lg ${
           saveMessage.type === 'success' ? 'bg-green-600' : 
@@ -217,7 +206,6 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
         <h2 className="text-xl font-bold text-gray-800">Route Summary</h2>
         
         <div className="flex gap-2">
-          {/* Save Trip button - only shown for logged in users */}
           {session && routeData.success && (
             <button
               onClick={handleSaveTrip}
@@ -240,7 +228,6 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
             </button>
           )}
           
-          {/* Navigation button */}
           {routeData.route && routeData.route.length > 1 && (
             <button
               onClick={openInGoogleMaps}
@@ -324,43 +311,35 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
         {expanded && logs && logs.length > 0 && (
           <div className="mt-4 overflow-y-auto max-h-[600px]">
             <div className="relative">
-              {/* Timeline vertical line */}
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
               
-              {/* Timeline stages */}
               <div className="space-y-4">
                 {stages.map((stage, stageIndex) => (
                   <div key={stageIndex} className="relative pl-14 pb-4">
-                    {/* Stage icon */}
                     <div className="absolute left-0 w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full border-4 border-white z-10 text-2xl">
                       {stage.icon}
                     </div>
                     
-                    {/* Stage card */}
                     <div className="p-4 bg-white rounded-lg shadow-md border border-gray-200">
                       <h4 className="font-semibold text-lg text-gray-800 mb-2">{stage.title}</h4>
                       <div className="space-y-1 text-sm text-gray-700 font-mono">
                         {stage.logs.map((log, logIndex) => {
-                          // Format station list items differently
                           if (log.match(/^\d+\. .+ \(.+\)$/)) {
                             return (
                               <div key={logIndex} className="font-medium text-blue-800 mt-2">{log}</div>
                             );
                           }
-                          // Format station details differently
                           else if (log.startsWith('   ')) {
                             return (
                               <div key={logIndex} className="pl-4 text-gray-600">{log.trim()}</div>
                             );
                           }
-                          // Format key metrics with highlighting
                           else if (log.includes('Battery:') || log.includes('Distance to destination:') || 
                                   log.includes('km |') || log.includes('Max range:')) {
                             return (
                               <div key={logIndex} className="font-medium">{log}</div>
                             );
                           }
-                          // Regular log entry
                           else {
                             return <div key={logIndex}>{log}</div>;
                           }
