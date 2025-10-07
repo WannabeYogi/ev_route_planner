@@ -3,8 +3,9 @@
 import './styles/button.css';
 import './styles/mapbox.css';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
+import CarSelector from './components/CarSelector';
 import Footer from './components/Footer';
 import GoogleMap from './components/GoogleMap';
 import Navbar from './components/Navbar';
@@ -17,7 +18,10 @@ export default function Home() {
     source: '',
     destination: '',
     batteryPercentage: '',
-    batteryRange: ''
+    manufacturer: '',
+    model: '',
+    batteryCapacityKWh: '',
+    rangeKm: ''
   });
 
   const [mapLocations, setMapLocations] = useState({
@@ -46,7 +50,7 @@ export default function Home() {
         async (position) => {
           const { latitude, longitude } = position.coords;
           
-          // Reverse geocode using Google Maps API
+          
           try {
             if (isLoaded && window.google && window.google.maps) {
               const geocoder = new window.google.maps.Geocoder();
@@ -111,7 +115,7 @@ export default function Home() {
       [type]: location.name
     }));
     
-    // Reset route data when locations change
+    
     setRouteData(null);
     setRouteError(null);
   };
@@ -132,12 +136,22 @@ export default function Home() {
       [name]: value
     }));
   };
+  
+  const handleCarSelect = useCallback((carData) => {
+    setFormData(prev => ({
+      ...prev,
+      manufacturer: carData.manufacturer,
+      model: carData.model,
+      batteryCapacityKWh: carData.batteryCapacityKWh,
+      rangeKm: carData.rangeKm
+    }));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!mapLocations.source || !mapLocations.destination || !formData.batteryPercentage || !formData.batteryRange) {
-      setRouteError('Please fill in all fields (source, destination, battery percentage, and range)');
+    if (!mapLocations.source || !mapLocations.destination || !formData.batteryPercentage || !formData.model) {
+      setRouteError('Please fill in all fields (source, destination, battery percentage, and vehicle)');
       return;
     }
     
@@ -155,7 +169,8 @@ export default function Home() {
           sourceLocation: mapLocations.source,
           destinationLocation: mapLocations.destination,
           batteryPercentage: formData.batteryPercentage,
-          batteryRange: formData.batteryRange
+          batteryCapacityKWh: formData.batteryCapacityKWh,
+          rangeKm: formData.rangeKm
         }),
       });
       
@@ -219,7 +234,7 @@ export default function Home() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div>
                       <label className="block text-sm text-gray-600 mb-1">
                         Battery Percentage
@@ -234,6 +249,7 @@ export default function Home() {
                           placeholder="Current %"
                           min="0"
                           max="100"
+                          required
                         />
                         <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
                           %
@@ -241,24 +257,9 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm text-gray-600 mb-1">
-                        Battery Range (on 100%)
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          name="batteryRange"
-                          value={formData.batteryRange}
-                          onChange={handleInputChange}
-                          className="input-field pr-8"
-                          placeholder="Range in km"
-                          min="0"
-                        />
-                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                          km
-                        </span>
-                      </div>
+                    <div className="border-t border-gray-200 pt-4">
+                      <h3 className="font-medium text-gray-800 mb-2">Select Your Vehicle</h3>
+                      <CarSelector onCarSelect={handleCarSelect} />
                     </div>
                   </div>
 

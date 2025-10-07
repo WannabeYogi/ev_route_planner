@@ -250,7 +250,7 @@ async function getRoadDistance(start, end) {
 }
 
 
-export async function planEvRoute(start, destination, batteryPercentage, fullRangeKm) {
+export async function planEvRoute(start, destination, batteryPercentage, fullRangeKm, batteryCapacityKWh = 60) {
   const reservePercentage = 10;
   let current = start;
   const route = [start];
@@ -260,7 +260,6 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
   let totalDriveTimeSec = 0;
   let totalChargingTimeMin = 0;
   let totalWaitTimeMin = 0;
-  const batteryCapacityKWh = 60;
   
   const logs = [];
   let success = false;
@@ -338,7 +337,7 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
     
     for (const station of filtered) {
       const distanceToStation = getDistance(current, station.location);
-      const batteryRequired = (distanceToStation / (maxRange * 0.9)) * 100;
+      const batteryRequired = (distanceToStation / fullRangeKm) * 100;
       
       if (batteryRequired > usableBatteryPercentage) {
         continue;

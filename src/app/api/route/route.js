@@ -4,9 +4,9 @@ import { planEvRoute } from '@/app/utils/serverEvRouteAlgorithm';
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { sourceLocation, destinationLocation, batteryPercentage, batteryRange } = body;
+    const { sourceLocation, destinationLocation, batteryPercentage, batteryCapacityKWh, rangeKm } = body;
     
-    if (!sourceLocation || !destinationLocation || !batteryPercentage || !batteryRange) {
+    if (!sourceLocation || !destinationLocation || !batteryPercentage || !batteryCapacityKWh || !rangeKm) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
         { status: 400 }
@@ -17,7 +17,8 @@ export async function POST(request) {
       [sourceLocation.lat, sourceLocation.lng],
       [destinationLocation.lat, destinationLocation.lng],
       parseFloat(batteryPercentage),
-      parseFloat(batteryRange)
+      parseFloat(rangeKm),
+      parseFloat(batteryCapacityKWh)
     );
     
     return NextResponse.json(result);
