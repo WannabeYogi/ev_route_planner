@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
+import BookingModal from './BookingModal';
+import { formatInTimeZone } from 'date-fns-tz';
 import { useSession } from 'next-auth/react';
 
 export default function RouteSummary({ routeData, isLoading, error, formData, mapLocations }) {
@@ -9,8 +11,9 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState({ type: '', text: '' });
   const [expanded, setExpanded] = useState(false);
+  const [bookingStation, setBookingStation] = useState(null);
+  const [bookedStations, setBookedStations] = useState([]);
   
-  // Helper function to format time in hours and minutes
   const formatTime = (timeInHours) => {
     const hours = Math.floor(timeInHours);
     const minutes = Math.round((timeInHours - hours) * 60);
@@ -27,7 +30,6 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
     }
   };
   
-  // Function to group log entries into logical stages
   const groupLogsIntoStages = (logs) => {
     if (!logs || logs.length === 0) return [];
     
@@ -70,7 +72,6 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
     return stages;
   };
   
-  // Function to save the trip
   const handleSaveTrip = async () => {
     if (!session || !routeData || !formData || !mapLocations) return;
     
@@ -143,7 +144,6 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
     }
   };
 
-  // Function to open Google Maps with the route
   const openInGoogleMaps = () => {
     if (!routeData || !routeData.route || routeData.route.length < 2) return;
     
@@ -162,6 +162,46 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
     
     window.open(mapUrl, '_blank');
   };
+  
+  const handleBookStation = (station) => {
+    setBookingStation(station);
+  };
+  
+  const handleBookingComplete = (booking) => {
+    setBookedStations([...bookedStations, booking]);
+    setBookingStation(null);
+  };
+  
+  useEffect(() => {
+    const checkCompletedBookings = async () => {
+      try {
+        await fetch('/api/stations/update-completed', {
+          method: 'POST',
+        });
+        
+        if (bookedStations.length > 0) {
+          const stationIds = [...new Set(bookedStations.map(b => b.stationId))];
+          
+          for (const stationId of stationIds) {
+            const response = await fetch(`/api/stations/booking?stationId=${stationId}`);
+            if (response.ok) {
+              const data = await response.json();
+              
+              setBookedStations(prev => prev.filter(booking => 
+                data.bookings.some(b => b.id === booking.id)
+              ));
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking completed bookings:', error);
+      }
+    };
+    
+    const interval = setInterval(checkCompletedBookings, 60000);
+    
+    return () => clearInterval(interval);
+  }, [bookedStations]);
   
   if (isLoading) {
     return (
@@ -274,7 +314,14 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
                   <div>
                     <p className="font-medium text-gray-900">{stop.name}</p>
                     <p className="text-sm text-gray-600">{stop.vicinity}</p>
+                    <div className="grid grid-cols-2 gap-x-4 mt-1 text-sm">
+                      <p>Charging: {Math.round(stop.chargingTimeMin)} min</p>
+                      <p>Speed: {stop.chargingSpeedKW} kW</p>
+                      <p>Battery: {Math.round(stop.batteryBefore)}% → {Math.round(stop.batteryAfter)}%</p>
+                      <p>Wait: {Math.round(stop.waitTimeMin)} min</p>
+                    </div>
                   </div>
+                  <div className="flex flex-col items-end justify-between h-full">
                   <div className="text-right">
                     <p className="text-sm text-gray-700">
                       <span className="font-medium text-purple-700">{stop.chargingSpeedKW} kW</span> charging speed
@@ -283,6 +330,20 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
                       <p className="text-sm text-gray-600">
                         {(stop.distanceToStation || stop.distance).toFixed(1)} km {index === 0 ? 'from source' : `from charging station ${index}`}
                       </p>
+                      )}
+                    </div>
+                    
+                    {stop.canBook && (
+                      <button
+                        onClick={() => handleBookStation(stop)}
+                        className={`px-3 py-1 rounded text-white mt-2 ${
+                          bookedStations.some(b => b.stationId === stop._id) 
+                            ? 'bg-green-500' 
+                            : 'bg-blue-500'
+                        }`}
+                      >
+                        {bookedStations.some(b => b.stationId === stop._id) ? 'Booked' : 'Book'}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -307,6 +368,14 @@ export default function RouteSummary({ routeData, isLoading, error, formData, ma
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
+        
+        {bookingStation && (
+          <BookingModal 
+            station={bookingStation} 
+            onClose={() => setBookingStation(null)}
+            onBook={handleBookingComplete}
+          />
+        )}
         
         {expanded && logs && logs.length > 0 && (
           <div className="mt-4 overflow-y-auto max-h-[600px]">

@@ -3,6 +3,7 @@ import './globals.css';
 import AuthProvider from './providers/AuthProvider';
 import { GoogleMapsProvider } from './utils/GoogleMapsLoader';
 import { Inter } from 'next/font/google';
+import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -23,7 +24,10 @@ export default function RootLayout({ children }) {
       </head>
       <body className={inter.className}>
         <AuthProvider>
-          <GoogleMapsProvider>{children}</GoogleMapsProvider>
+          <GoogleMapsProvider>
+            {children}
+            <Toaster position="top-center" />
+          </GoogleMapsProvider>
         </AuthProvider>
       </body>
     </html>

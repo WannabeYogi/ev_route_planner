@@ -44,20 +44,11 @@ export default function Navbar() {
               <Link href="/learn" className="text-gray-600 hover:text-black">
                 Learn More
               </Link>
-              <Link href="/business" className="text-gray-600 hover:text-black">
-                Business
-              </Link>
-              <Link href="/about" className="text-gray-600 hover:text-black">
-                About
-              </Link>
             </div>
           </div>
 
           <div className="flex items-center gap-6">
             <div className="hidden md:flex items-center gap-6">
-              <Link href="/help" className="text-gray-600 hover:text-black text-sm font-medium">
-                Help
-              </Link>
               
               {status === 'authenticated' ? (
                 <div className="relative">
@@ -86,6 +77,12 @@ export default function Navbar() {
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         My Saved Rides
+                      </Link>
+                      <Link
+                        href="/my-bookings"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        My Bookings
                       </Link>
                       <Link
                         href="/profile"
@@ -157,24 +154,6 @@ export default function Navbar() {
               >
                 Learn More
               </Link>
-              <Link
-                href="/business"
-                className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-black hover:bg-gray-50"
-              >
-                Business
-              </Link>
-              <Link
-                href="/about"
-                className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-black hover:bg-gray-50"
-              >
-                About
-              </Link>
-              <Link
-                href="/help"
-                className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-black hover:bg-gray-50"
-              >
-                Help
-              </Link>
               
               {status === 'authenticated' ? (
                 <>
@@ -183,6 +162,12 @@ export default function Navbar() {
                     className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-black hover:bg-gray-50"
                   >
                     My Saved Rides
+                  </Link>
+                  <Link
+                    href="/my-bookings"
+                    className="block px-4 py-2 text-base font-medium text-gray-600 hover:text-black hover:bg-gray-50"
+                  >
+                    My Bookings
                   </Link>
                   <Link
                     href="/profile"

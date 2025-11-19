@@ -56,11 +56,14 @@ export async function POST(request) {
       sourceLocation,
       destinationLocation,
       batteryPercentage,
-      batteryRange,
+      batteryCapacityKWh,
+      rangeKm,
+      manufacturer,
+      model,
       routeData
     } = body;
     
-    if (!sourceLocation || !destinationLocation || !batteryPercentage || !batteryRange || !routeData) {
+    if (!sourceLocation || !destinationLocation || !batteryPercentage || !routeData) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -85,7 +88,7 @@ export async function POST(request) {
       'destinationLocation.lat': destinationLocation.lat,
       'destinationLocation.lng': destinationLocation.lng,
       batteryPercentage: batteryPercentage,
-      batteryRange: batteryRange
+      'car.model': user.car?.model
     });
     
     if (existingRide) {
@@ -108,7 +111,12 @@ export async function POST(request) {
         lng: destinationLocation.lng
       },
       batteryPercentage,
-      batteryRange,
+      car: user.car || {
+        manufacturer: manufacturer || '',
+        model: model || '',
+        batteryCapacityKWh: batteryCapacityKWh || 0,
+        rangeKm: rangeKm || 0
+      },
       routeSummary: {
         drivingTime: routeData.summary.drivingTime,
         chargingTime: routeData.summary.chargingTime,

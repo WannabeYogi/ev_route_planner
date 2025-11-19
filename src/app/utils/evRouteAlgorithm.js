@@ -187,7 +187,7 @@ async function searchNearbyEvStations(current, location, maxRange, initialRadius
               name: place.name,
               location: stationLocation,
               vicinity: place.vicinity || '',
-              chargingSpeedKW: [30, 45, 60][Math.floor(Math.random() * 3)],
+              chargingSpeedKW: [11, 20, 45][Math.floor(Math.random() * 3)],
               waitTimeMin: Math.floor(Math.random() * 26) + 5
             });
           }

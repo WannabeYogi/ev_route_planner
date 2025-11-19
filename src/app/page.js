@@ -4,6 +4,9 @@ import './styles/button.css';
 import './styles/mapbox.css';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
 
 import CarSelector from './components/CarSelector';
 import Footer from './components/Footer';
@@ -14,6 +17,8 @@ import SearchBox from './components/SearchBox';
 import { useGoogleMaps } from './utils/GoogleMapsLoader';
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     source: '',
     destination: '',
@@ -21,8 +26,10 @@ export default function Home() {
     manufacturer: '',
     model: '',
     batteryCapacityKWh: '',
-    rangeKm: ''
+    rangeKm: '',
+    startTime: new Date() // Add starting time
   });
+  const [userProfile, setUserProfile] = useState(null);
 
   const [mapLocations, setMapLocations] = useState({
     source: null,
@@ -42,6 +49,35 @@ export default function Home() {
       getCurrentLocation();
     }
   }, [isLoaded]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchUserProfile();
+    }
+  }, [status]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('/api/user/profile');
+      if (response.ok) {
+        const data = await response.json();
+        setUserProfile(data);
+        
+        // If user has a car saved, use it
+        if (data.car?.model) {
+          setFormData(prev => ({
+            ...prev,
+            manufacturer: data.car.manufacturer,
+            model: data.car.model,
+            batteryCapacityKWh: data.car.batteryCapacityKWh,
+            rangeKm: data.car.rangeKm
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const getCurrentLocation = () => {
     setIsLoadingLocation(true);
@@ -169,8 +205,7 @@ export default function Home() {
           sourceLocation: mapLocations.source,
           destinationLocation: mapLocations.destination,
           batteryPercentage: formData.batteryPercentage,
-          batteryCapacityKWh: formData.batteryCapacityKWh,
-          rangeKm: formData.rangeKm
+          startTime: formData.startTime.toISOString()
         }),
       });
       
@@ -211,6 +246,37 @@ export default function Home() {
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Starting Time
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={format(formData.startTime, 'yyyy-MM-dd')}
+                        onChange={(e) => {
+                          const newDate = new Date(formData.startTime);
+                          const [year, month, day] = e.target.value.split('-');
+                          newDate.setFullYear(parseInt(year), parseInt(month) - 1, parseInt(day));
+                          setFormData({...formData, startTime: newDate});
+                        }}
+                        className="w-full p-2 border rounded-md"
+                        min={format(new Date(), 'yyyy-MM-dd')}
+                      />
+                      <input
+                        type="time"
+                        value={format(formData.startTime, 'HH:mm')}
+                        onChange={(e) => {
+                          const newDate = new Date(formData.startTime);
+                          const [hours, minutes] = e.target.value.split(':');
+                          newDate.setHours(parseInt(hours), parseInt(minutes));
+                          setFormData({...formData, startTime: newDate});
+                        }}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                  </div>
+                  
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -mt-1 w-2 h-2 bg-black rounded-full"></div>
                     <SearchBox
@@ -257,10 +323,38 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className="border-t border-gray-200 pt-4">
-                      <h3 className="font-medium text-gray-800 mb-2">Select Your Vehicle</h3>
-                      <CarSelector onCarSelect={handleCarSelect} />
-                    </div>
+                    {userProfile?.car?.model ? (
+                      <div className="border-t border-gray-200 pt-4">
+                        <h3 className="font-medium text-gray-800 mb-2">Your Vehicle</h3>
+                        <div className="p-4 bg-blue-50 rounded-lg">
+                          <h4 className="font-medium text-blue-900">{userProfile.car.manufacturer} {userProfile.car.model}</h4>
+                          <div className="grid grid-cols-2 gap-4 mt-2">
+                            <div>
+                              <span className="text-gray-600">Battery Capacity:</span>
+                              <span className="ml-1 font-medium">{userProfile.car.batteryCapacityKWh} kWh</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Range:</span>
+                              <span className="ml-1 font-medium">{userProfile.car.rangeKm} km</span>
+                            </div>
+                          </div>
+                          <div className="mt-3 text-sm">
+                            <a href="/profile" className="text-blue-600 hover:text-blue-800">Change vehicle in profile</a>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-t border-gray-200 pt-4">
+                        <h3 className="font-medium text-gray-800 mb-2">Select Your Vehicle</h3>
+                        <p className="text-amber-600 mb-3">Please set up your vehicle in your profile first.</p>
+                        <a 
+                          href="/profile" 
+                          className="block w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-center rounded-md"
+                        >
+                          Set Up Vehicle
+                        </a>
+                      </div>
+                    )}
                   </div>
 
                   <button 
