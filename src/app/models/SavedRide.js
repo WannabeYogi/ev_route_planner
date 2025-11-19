@@ -20,9 +20,11 @@ const SavedRideSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  batteryRange: {
-    type: Number,
-    required: true
+  car: {
+    manufacturer: String,
+    model: String,
+    batteryCapacityKWh: Number,
+    rangeKm: Number
   },
   routeSummary: {
     drivingTime: Number,
@@ -33,7 +35,7 @@ const SavedRideSchema = new mongoose.Schema({
   route: [{ lat: Number, lng: Number }],
   chargingStops: [{
     name: String,
-    location: [Number], // [lat, lng]
+    location: [Number],
     vicinity: String,
     chargingSpeedKW: Number,
     waitTimeMin: Number,

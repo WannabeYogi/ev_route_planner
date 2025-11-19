@@ -8,7 +8,6 @@ export async function middleware(request) {
   
   const isPublicPath = path === '/login' || 
                        path === '/register' || 
-                       path === '/' ||
                        path === '/api/auth/register' ||
                        path.startsWith('/api/auth');
   
@@ -16,8 +15,10 @@ export async function middleware(request) {
   const isApiPath = path.startsWith('/api') && !path.startsWith('/api/auth');
   
   
-  const isProtectedPage = path.startsWith('/my-rides') || 
-                          path.startsWith('/profile');
+  const isProtectedPage = path === '/' ||
+                         path.startsWith('/my-rides') || 
+                         path.startsWith('/profile') ||
+                         path.startsWith('/admin');
   
                           
   const token = await getToken({
@@ -41,9 +42,15 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
+    '/',
     '/my-rides/:path*',
+    '/my-bookings/:path*',
     '/profile/:path*',
+    '/admin/:path*',
     '/api/rides/:path*',
+    '/api/route',
+    '/api/stations/:path*',
+    '/api/admin/:path*',
     '/login',
     '/register'
   ],

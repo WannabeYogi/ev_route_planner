@@ -1,6 +1,7 @@
+import Station from '@/app/models/Station';
+import connectToDatabase from '@/app/utils/mongodb';
 import { decode } from '@googlemaps/polyline-codec';
 
-//Calculates distance between two coordinates using the Haversine formula
 function getDistance(coord1, coord2) {
   const [lat1, lon1] = coord1;
   const [lat2, lon2] = coord2;
@@ -130,11 +131,12 @@ async function searchNearbyEvStations(current, location, maxRange, initialRadius
   const [lat, lng] = location;
   let radius = initialRadius;
   
+  await connectToDatabase();
+  
   while (radius <= maxRadius) {
     console.log(`Searching EV stations near [${lat}, ${lng}] within ${radius} meters...`);
     
     try {
-      
       const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&keyword=EV%20charging%20station&type=charging_station&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
       const response = await fetch(url);
       const data = await response.json();
@@ -144,13 +146,32 @@ async function searchNearbyEvStations(current, location, maxRange, initialRadius
         
         for (const place of data.results) {
           const stationLocation = [place.geometry.location.lat, place.geometry.location.lng];
+          
           if (getDistance(current, stationLocation) <= maxRange) {
+            let station = await Station.findOne({ googlePlaceId: place.place_id });
+            
+            if (!station) {
+              station = new Station({
+                googlePlaceId: place.place_id,
+                name: place.name,
+                location: [place.geometry.location.lat, place.geometry.location.lng],
+                vicinity: place.vicinity || '',
+                chargingSpeedKW: [11, 20, 45][Math.floor(Math.random() * 3)],
+                bookings: []
+              });
+              await station.save();
+            }
+            
+            const waitTimeMin = calculateWaitTime(station, new Date());
+            
             stations.push({
-              name: place.name,
-              location: stationLocation,
-              vicinity: place.vicinity || '',
-              chargingSpeedKW: [30, 45, 60][Math.floor(Math.random() * 3)],
-              waitTimeMin: Math.floor(Math.random() * 26) + 5
+              _id: station._id,
+              googlePlaceId: station.googlePlaceId,
+              name: station.name,
+              location: [station.location[0], station.location[1]],
+              vicinity: station.vicinity || '',
+              chargingSpeedKW: station.chargingSpeedKW,
+              waitTimeMin: waitTimeMin
             });
           }
         }
@@ -171,6 +192,27 @@ async function searchNearbyEvStations(current, location, maxRange, initialRadius
 }
 
 
+function calculateWaitTime(station, arrivalTime) {
+  if (!station.bookings || station.bookings.length === 0) {
+    return 0;
+  }
+  
+  const activeBookings = station.bookings.filter(booking => !booking.isCompleted);
+  
+  const sortedBookings = [...activeBookings].sort((a, b) => a.startTime - b.startTime);
+  
+  const relevantBookings = sortedBookings.filter(booking => booking.endTime > arrivalTime);
+  
+  if (relevantBookings.length === 0) {
+    return 0;
+  }
+  
+  const lastBooking = relevantBookings[relevantBookings.length - 1];
+  
+  const waitTimeMs = lastBooking.endTime - arrivalTime;
+  return Math.max(0, waitTimeMs / (1000 * 60));
+}
+
 function filterStationsTowardDestination(stations, current, destination) {
   return stations.filter(station => 
     getDistance(station.location, destination) < getDistance(current, destination)
@@ -179,10 +221,16 @@ function filterStationsTowardDestination(stations, current, destination) {
 
 
 function scoreStations(stations, destination) {
+  const maxWaitTime = Math.max(...stations.map(s => s.waitTimeMin), 1);
+  
   return stations
     .map(station => {
-      const dist = getDistance(station.location, destination);
-      return { ...station, score: 1 / (dist + 1e-5) };
+      const distScore = 1 / (getDistance(station.location, destination) + 1e-5);
+      const waitScore = 1 / (station.waitTimeMin + 1);
+      
+      const combinedScore = (distScore * 0.7) + (waitScore * 0.3);
+      
+      return { ...station, score: combinedScore };
     })
     .sort((a, b) => b.score - a.score);
 }
@@ -210,13 +258,14 @@ async function getRoadDistance(start, end) {
 }
 
 
-export async function planEvRoute(start, destination, batteryPercentage, fullRangeKm, batteryCapacityKWh = 60) {
+export async function planEvRoute(start, destination, batteryPercentage, fullRangeKm, batteryCapacityKWh = 60, startTime = new Date()) {
   const reservePercentage = 10;
   let current = start;
   const route = [start];
   let remainingBattery = batteryPercentage;
   const stationsVisited = [];
   
+  let currentTime = new Date(startTime);
   let totalDriveTimeSec = 0;
   let totalChargingTimeMin = 0;
   let totalWaitTimeMin = 0;
@@ -323,6 +372,14 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
     const { path, duration } = await getRoadPathAndTimeWithTraffic(current, best.location);
     totalDriveTimeSec += duration;
     
+    currentTime = new Date(currentTime.getTime() + duration * 1000);
+    
+    best.arrivalTime = new Date(currentTime);
+    
+    best.waitTimeMin = calculateWaitTime(best, currentTime);
+    
+    currentTime = new Date(currentTime.getTime() + best.waitTimeMin * 60 * 1000);
+    
     remainingBattery -= best.batteryUsed;
     
     const distanceToDestFromStation = getDistance(best.location, destination);
@@ -347,6 +404,8 @@ export async function planEvRoute(start, destination, batteryPercentage, fullRan
     
     totalChargingTimeMin += chargingTimeMin;
     totalWaitTimeMin += best.waitTimeMin;
+    
+    currentTime = new Date(currentTime.getTime() + chargingTimeMin * 60 * 1000);
     
     best.batteryBefore = remainingBattery;
     best.batteryAfter = targetBattery;

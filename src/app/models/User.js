@@ -23,7 +23,13 @@ const UserSchema = new mongoose.Schema({
   savedRides: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'SavedRide'
-  }]
+  }],
+  car: {
+    manufacturer: String,
+    model: String,
+    batteryCapacityKWh: Number,
+    rangeKm: Number
+  }
 }, { timestamps: true });
 
 UserSchema.pre('save', async function(next) {
