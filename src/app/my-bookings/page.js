@@ -89,7 +89,7 @@ export default function MyBookingsPage() {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center pt-16">
           <div className="w-8 h-8 border-t-2 border-blue-500 rounded-full animate-spin"></div>
         </div>
         <Footer />
@@ -101,7 +101,7 @@ export default function MyBookingsPage() {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center pt-16">
           <div className="text-center p-8 bg-red-50 rounded-lg max-w-md">
             <h2 className="text-xl font-semibold text-red-600 mb-2">Access Denied</h2>
             <p className="text-gray-700">You need to be logged in to access this page.</p>
@@ -119,7 +119,7 @@ export default function MyBookingsPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-8 pt-24">
         <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
           <h1 className="text-2xl font-bold mb-4 md:mb-0">My Bookings</h1>
           
